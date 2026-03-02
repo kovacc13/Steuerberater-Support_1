@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BelegAI Demo - Steuerberatung Susanne Wei&szlig;</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; scroll-behavior: smooth; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .pulse-border { animation: pulseBorder 2s infinite; }
+        @keyframes pulseBorder { 0%, 100% { border-color: #16a34a; } 50% { border-color: #86efac; } }
+        .typing-dots::after { content: '...'; animation: dots 1.5s steps(4, end) infinite; }
+        @keyframes dots { 0%, 20% { content: ''; } 40% { content: '.'; } 60% { content: '..'; } 80%, 100% { content: '...'; } }
+        .glass { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); }
+        .tab-active { border-bottom: 3px solid #16a34a; color: #15803d; font-weight: 600; }
+        .tab-inactive { border-bottom: 3px solid transparent; color: #64748b; }
+        .check-valid { color: #16a34a; }
+        .check-invalid { color: #dc2626; }
+        .scan-line { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, #22c55e, transparent); animation: scanMove 2s ease-in-out infinite; }
+        @keyframes scanMove { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+        .drop-zone { transition: all 0.3s ease; }
+        .drop-zone.dragover { background: #f0fdf4; border-color: #16a34a; transform: scale(1.02); }
+    </style>
+</head>
+<body class="bg-gray-50 text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6">
+            <div class="flex justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="index.html" class="text-slate-400 hover:text-slate-600 text-sm">&larr; Dashboard</a>
+                    <span class="text-slate-300">|</span>
+                    <span class="font-bold text-lg text-slate-800">Beleg<span class="text-green-700">AI</span></span>
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Demo</span>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="switchTab('beleg')" id="tab-beleg" class="px-4 py-4 text-sm tab-active transition-all">Belegerfassung</button>
+                    <button onclick="switchTab('email')" id="tab-email" class="px-4 py-4 text-sm tab-inactive transition-all">Schriftverkehr</button>
+                    <button onclick="switchTab('report')" id="tab-report" class="px-4 py-4 text-sm tab-inactive transition-all">Auswertungen</button>
+                    <button onclick="switchTab('auto')" id="tab-auto" class="px-4 py-4 text-sm tab-inactive transition-all">Automation</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+
+        <!-- ==================== TAB 1: BELEGERFASSUNG ==================== -->
+        <section id="section-beleg">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-slate-900">Belegverarbeitung mit KI</h1>
+                <p class="mt-2 text-slate-500 max-w-2xl mx-auto">Laden Sie eine Rechnung hoch oder w&auml;hlen Sie ein Beispiel &ndash; Claude AI extrahiert sofort alle Pflichtangaben und pr&uuml;ft die UStG-Konformit&auml;t.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Left: Upload / Sample Selection -->
+                <div class="space-y-6">
+                    <!-- Drop Zone -->
+                    <div id="drop-zone" class="drop-zone border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:border-green-500 hover:bg-green-50/30 transition-all"
+                         ondragover="event.preventDefault(); this.classList.add('dragover')"
+                         ondragleave="this.classList.remove('dragover')"
+                         ondrop="event.preventDefault(); this.classList.remove('dragover'); handleDrop(event)"
+                         onclick="document.getElementById('file-input').click()">
+                        <input type="file" id="file-input" class="hidden" accept="image/*,.pdf" onchange="handleFileSelect(event)">
+                        <div class="text-5xl mb-4 opacity-60">&#128247;</div>
+                        <p class="font-semibold text-slate-700">Beleg hier ablegen oder klicken</p>
+                        <p class="text-sm text-slate-400 mt-1">Foto, Scan oder PDF einer Rechnung</p>
+                    </div>
+
+                    <!-- Sample Invoices -->
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Oder Beispielbeleg w&auml;hlen:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button onclick="loadSample('restaurant')" class="sample-btn bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all group">
+                                <div class="text-2xl mb-2">&#127869;</div>
+                                <div class="font-semibold text-sm text-slate-700 group-hover:text-green-700">Restaurantrechnung</div>
+                                <div class="text-xs text-slate-400">Gasthaus Zum Goldenen Hirsch</div>
+                            </button>
+                            <button onclick="loadSample('buero')" class="sample-btn bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all group">
+                                <div class="text-2xl mb-2">&#128424;</div>
+                                <div class="font-semibold text-sm text-slate-700 group-hover:text-green-700">B&uuml;romaterial</div>
+                                <div class="text-xs text-slate-400">Pagro Diskont Wien</div>
+                            </button>
+                            <button onclick="loadSample('it')" class="sample-btn bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all group">
+                                <div class="text-2xl mb-2">&#128187;</div>
+                                <div class="font-semibold text-sm text-slate-700 group-hover:text-green-700">IT-Dienstleistung</div>
+                                <div class="text-xs text-slate-400">WebDev Solutions GmbH</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Invoice Preview -->
+                    <div id="invoice-preview" class="hidden bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                        <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between items-center">
+                            <span class="text-sm font-semibold text-slate-600">Beleg-Vorschau</span>
+                            <span id="preview-filename" class="text-xs text-slate-400"></span>
+                        </div>
+                        <div id="invoice-content" class="p-5 font-mono text-xs leading-relaxed text-slate-700 relative min-h-[200px]">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: AI Extraction Result -->
+                <div class="space-y-6">
+                    <!-- Processing Status -->
+                    <div id="processing-status" class="hidden">
+                        <div class="bg-green-50 border border-green-200 rounded-2xl p-6 text-center">
+                            <div class="inline-block w-8 h-8 border-4 border-green-300 border-t-green-600 rounded-full animate-spin mb-3"></div>
+                            <p class="font-semibold text-green-800">Claude AI verarbeitet den Beleg<span class="typing-dots"></span></p>
+                            <p class="text-sm text-green-600 mt-1">Texterkennung, Extraktion & Validierung</p>
+                        </div>
+                    </div>
+
+                    <!-- Extracted Data -->
+                    <div id="extraction-result" class="hidden">
+                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-green-700 text-white px-5 py-3 flex justify-between items-center">
+                                <span class="font-semibold text-sm">Extrahierte Daten</span>
+                                <span class="text-xs bg-green-600 px-2 py-0.5 rounded-full">Claude AI</span>
+                            </div>
+                            <div class="p-5 space-y-3" id="extracted-fields">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UStG Validation -->
+                    <div id="ustg-validation" class="hidden">
+                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-slate-800 text-white px-5 py-3 flex justify-between items-center">
+                                <span class="font-semibold text-sm">UStG-Pr&uuml;fung (Pflichtangaben)</span>
+                                <span id="ustg-badge" class="text-xs px-2 py-0.5 rounded-full"></span>
+                            </div>
+                            <div class="p-5 space-y-2" id="ustg-checks">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Booking Suggestion -->
+                    <div id="booking-suggestion" class="hidden">
+                        <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                            <div class="bg-blue-600 text-white px-5 py-3">
+                                <span class="font-semibold text-sm">Kontierungsvorschlag</span>
+                            </div>
+                            <div class="p-5" id="booking-content">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- JSON Export -->
+                    <div id="json-export" class="hidden">
+                        <div class="bg-slate-900 rounded-2xl p-5 overflow-x-auto">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wide">JSON-Export</span>
+                                <button onclick="copyJSON()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded-lg transition-colors">Kopieren</button>
+                            </div>
+                            <pre id="json-output" class="text-green-400 text-xs font-mono leading-relaxed"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 2: SCHRIFTVERKEHR ==================== -->
+        <section id="section-email" class="hidden">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-slate-900">Mandantenkommunikation</h1>
+                <p class="mt-2 text-slate-500 max-w-2xl mx-auto">KI-gest&uuml;tzte E-Mail-Vorlagen f&uuml;r typische Situationen in der Kanzlei. Speziell f&uuml;r Freiberufler-Mandanten.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Template Selection -->
+                <div class="space-y-3">
+                    <p class="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-2">Vorlage w&auml;hlen</p>
+                    <button onclick="loadEmailTemplate('unterlagen')" class="email-template-btn w-full bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">&#128203;</span>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">Unterlagen anfordern</div>
+                                <div class="text-xs text-slate-400">Fehlende Belege zum Quartalsende</div>
+                            </div>
+                        </div>
+                    </button>
+                    <button onclick="loadEmailTemplate('fristen')" class="email-template-btn w-full bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">&#9200;</span>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">Fristenhinweis</div>
+                                <div class="text-xs text-slate-400">USt-Voranmeldung / ESt-Erkl&auml;rung</div>
+                            </div>
+                        </div>
+                    </button>
+                    <button onclick="loadEmailTemplate('rueckfrage')" class="email-template-btn w-full bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">&#10067;</span>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">R&uuml;ckfrage zu Beleg</div>
+                                <div class="text-xs text-slate-400">Fehlende Angaben auf Rechnung</div>
+                            </div>
+                        </div>
+                    </button>
+                    <button onclick="loadEmailTemplate('quartal')" class="email-template-btn w-full bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">&#128197;</span>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">Quartalsende-Info</div>
+                                <div class="text-xs text-slate-400">&bdquo;Was brauche ich von euch&ldquo;</div>
+                            </div>
+                        </div>
+                    </button>
+                    <button onclick="loadEmailTemplate('willkommen')" class="email-template-btn w-full bg-white border border-slate-200 rounded-xl p-4 text-left hover:border-green-400 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <span class="text-xl">&#128075;</span>
+                            <div>
+                                <div class="font-semibold text-sm text-slate-700">Willkommen</div>
+                                <div class="text-xs text-slate-400">Onboarding neuer Freiberufler-Mandant</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Email Editor -->
+                <div class="lg:col-span-2">
+                    <div id="email-placeholder" class="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
+                        <div class="text-5xl mb-4 opacity-40">&#9993;</div>
+                        <p class="text-slate-400 font-medium">W&auml;hlen Sie links eine Vorlage</p>
+                        <p class="text-sm text-slate-300 mt-1">Die KI generiert einen personalisierten Entwurf</p>
+                    </div>
+                    <div id="email-editor" class="hidden bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400 w-12">An:</span>
+                                <input id="email-to" class="flex-1 text-sm bg-white border border-slate-200 rounded px-3 py-1.5" value="mandant@freiberufler.at">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-semibold text-slate-400 w-12">Betreff:</span>
+                                <input id="email-subject" class="flex-1 text-sm bg-white border border-slate-200 rounded px-3 py-1.5 font-semibold" value="">
+                            </div>
+                        </div>
+                        <div class="p-5">
+                            <textarea id="email-body" class="w-full h-64 text-sm text-slate-700 leading-relaxed border-0 focus:ring-0 resize-none outline-none" placeholder="E-Mail-Text wird generiert..."></textarea>
+                        </div>
+                        <div class="px-5 py-3 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                            <span class="text-xs text-slate-400">Generiert von Claude AI &ndash; bitte vor dem Versand pr&uuml;fen</span>
+                            <div class="flex gap-2">
+                                <button onclick="copyEmail()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg transition-colors font-medium">Kopieren</button>
+                                <button class="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">Als Vorlage speichern</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 3: AUSWERTUNGEN ==================== -->
+        <section id="section-report" class="hidden">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-slate-900">Zusammenfassungen & Auswertungen</h1>
+                <p class="mt-2 text-slate-500 max-w-2xl mx-auto">Lassen Sie KI Ihre Daten interpretieren: Auff&auml;lligkeiten erkennen, Monatsberichte textuell aufbereiten, Trends identifizieren.</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Sample Data Table -->
+                <div>
+                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div class="bg-slate-50 px-5 py-3 border-b border-slate-200 flex justify-between items-center">
+                            <span class="font-semibold text-sm text-slate-600">Mandant: Lisa M&uuml;ller (Fotografin, Freiberuflerin)</span>
+                            <span class="text-xs text-slate-400">Q1/2026</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="text-left px-4 py-2 font-semibold text-slate-500">Datum</th>
+                                        <th class="text-left px-4 py-2 font-semibold text-slate-500">Kategorie</th>
+                                        <th class="text-left px-4 py-2 font-semibold text-slate-500">Partner</th>
+                                        <th class="text-right px-4 py-2 font-semibold text-slate-500">Netto</th>
+                                        <th class="text-right px-4 py-2 font-semibold text-slate-500">USt</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-table-body" class="divide-y divide-slate-100">
+                                </tbody>
+                                <tfoot class="bg-slate-50 font-semibold">
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-2 text-slate-600">Summe Q1/2026</td>
+                                        <td class="text-right px-4 py-2 text-slate-800" id="report-total-netto"></td>
+                                        <td class="text-right px-4 py-2 text-slate-800" id="report-total-ust"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 flex gap-3">
+                        <button onclick="generateAnalysis('auffaellig')" class="flex-1 bg-green-600 hover:bg-green-700 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors">
+                            &bdquo;Was f&auml;llt auf?&ldquo;
+                        </button>
+                        <button onclick="generateAnalysis('quartalsbericht')" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors">
+                            Quartalsbericht
+                        </button>
+                        <button onclick="generateAnalysis('optimierung')" class="flex-1 bg-slate-700 hover:bg-slate-800 text-white text-sm font-medium py-3 px-4 rounded-xl transition-colors">
+                            Optimierungstipps
+                        </button>
+                    </div>
+                </div>
+
+                <!-- AI Analysis Result -->
+                <div>
+                    <div id="analysis-placeholder" class="bg-white border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center h-full flex flex-col items-center justify-center">
+                        <div class="text-5xl mb-4 opacity-40">&#128202;</div>
+                        <p class="text-slate-400 font-medium">KI-Analyse starten</p>
+                        <p class="text-sm text-slate-300 mt-1">W&auml;hlen Sie eine Analyse-Art links</p>
+                    </div>
+                    <div id="analysis-result" class="hidden bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                        <div id="analysis-header" class="bg-green-700 text-white px-5 py-3">
+                            <span class="font-semibold text-sm" id="analysis-title"></span>
+                        </div>
+                        <div class="p-5">
+                            <div id="analysis-content" class="text-sm text-slate-700 leading-relaxed whitespace-pre-line"></div>
+                        </div>
+                        <div class="px-5 py-3 border-t border-slate-100 bg-slate-50">
+                            <span class="text-xs text-slate-400">Hinweis: KI-generierte Analyse &ndash; alle Angaben ohne Gew&auml;hr. Bitte manuell pr&uuml;fen.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== TAB 4: AUTOMATION ==================== -->
+        <section id="section-auto" class="hidden">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-slate-900">Automatisierung &ndash; Ausblick</h1>
+                <p class="mt-2 text-slate-500 max-w-2xl mx-auto">So k&ouml;nnte Ihr automatisierter Kanzlei-Workflow in Zukunft aussehen: Belege per E-Mail, automatische Verarbeitung, strukturierte Aufgabenverteilung.</p>
+            </div>
+
+            <!-- Workflow Visualization -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-8 mb-8">
+                <h3 class="text-lg font-bold text-slate-800 mb-6 text-center">Automatisierter Belegworkflow</h3>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-2">
+                    <!-- Step 1 -->
+                    <div class="flex-1 text-center p-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="text-3xl">&#128231;</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-800">1. Mandant sendet E-Mail</h4>
+                        <p class="text-xs text-slate-500 mt-1">Fotos/Scans als Anhang an<br><code class="bg-slate-100 px-1 rounded">belege@kanzlei-weiss.at</code></p>
+                    </div>
+                    <div class="hidden md:block text-3xl text-slate-300">&rarr;</div>
+                    <!-- Step 2 -->
+                    <div class="flex-1 text-center p-4">
+                        <div class="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="text-3xl">&#9881;</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-800">2. n8n Workflow</h4>
+                        <p class="text-xs text-slate-500 mt-1">E-Mail wird erkannt, Anh&auml;nge extrahiert, an Claude AI gesendet</p>
+                    </div>
+                    <div class="hidden md:block text-3xl text-slate-300">&rarr;</div>
+                    <!-- Step 3 -->
+                    <div class="flex-1 text-center p-4">
+                        <div class="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="text-3xl">&#129302;</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-800">3. Claude AI</h4>
+                        <p class="text-xs text-slate-500 mt-1">Extraktion der Belegdaten, UStG-Pr&uuml;fung, Kontierungsvorschlag</p>
+                    </div>
+                    <div class="hidden md:block text-3xl text-slate-300">&rarr;</div>
+                    <!-- Step 4 -->
+                    <div class="flex-1 text-center p-4">
+                        <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="text-3xl">&#128203;</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-800">4. Aufgabe erstellt</h4>
+                        <p class="text-xs text-slate-500 mt-1">Werkvertragnehmer bekommt strukturierte Buchungsaufgabe</p>
+                    </div>
+                    <div class="hidden md:block text-3xl text-slate-300">&rarr;</div>
+                    <!-- Step 5 -->
+                    <div class="flex-1 text-center p-4">
+                        <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <span class="text-3xl">&#9989;</span>
+                        </div>
+                        <h4 class="font-bold text-sm text-slate-800">5. BMD Import</h4>
+                        <p class="text-xs text-slate-500 mt-1">Fertige CSV/Excel-Datei direkt ins Buchhaltungssystem</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Benefits & Timeline -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Benefits -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 mb-4">Vorteile f&uuml;r Ihre Kanzlei</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-sm">1</div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Zeitersparnis: 60-80%</h4>
+                                <p class="text-xs text-slate-500">Manuelle Belegerfassung entf&auml;llt fast vollst&auml;ndig</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-sm">2</div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Weniger Fehler</h4>
+                                <p class="text-xs text-slate-500">KI-Pr&uuml;fung der Pflichtangaben reduziert R&uuml;ckfragen</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-sm">3</div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Skalierbar</h4>
+                                <p class="text-xs text-slate-500">Mehr Mandanten bearbeiten ohne zus&auml;tzliche Werkvertragnehmer</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold text-sm">4</div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">DSGVO-konform</h4>
+                                <p class="text-xs text-slate-500">Daten werden nicht dauerhaft bei KI-Anbietern gespeichert</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Implementation Roadmap -->
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                    <h3 class="font-bold text-slate-800 mb-4">Umsetzungsfahrplan</h3>
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Woche 1&ndash;2: Pilotprojekt</h4>
+                                <p class="text-xs text-slate-500">Claude.ai Account, erste Belege testen, Prompt optimieren</p>
+                                <span class="inline-block mt-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Sofort m&ouml;glich</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-3 h-3 bg-blue-500 rounded-full mt-1"></div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Woche 3&ndash;4: Standardisierung</h4>
+                                <p class="text-xs text-slate-500">Excel-Template f&uuml;r BMD-Import, Vorlagen f&uuml;r Mandantenkommunikation</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-3 h-3 bg-purple-500 rounded-full mt-1"></div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Monat 2: Automation</h4>
+                                <p class="text-xs text-slate-500">E-Mail-Workflow mit n8n, automatische Aufgabenzuweisung</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-3 h-3 bg-amber-500 rounded-full mt-1"></div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-sm text-slate-800">Monat 3+: Vollintegration</h4>
+                                <p class="text-xs text-slate-500">Alle Mandanten im System, Werkvertragnehmer geschult, laufende Optimierung</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DSGVO Notice -->
+            <div class="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-6">
+                <div class="flex items-start gap-3">
+                    <span class="text-2xl">&#128274;</span>
+                    <div>
+                        <h3 class="font-bold text-amber-900">Hinweis zum Datenschutz (DSGVO)</h3>
+                        <p class="text-sm text-amber-800 mt-1">
+                            Bei der Nutzung von KI-Diensten ist der Schutz personenbezogener Daten zentral. Klientendaten d&uuml;rfen
+                            <strong>nicht ohne Rechtsgrundlage</strong> an externe Dienste &uuml;bermittelt werden. L&ouml;sungen:
+                        </p>
+                        <ul class="mt-2 space-y-1 text-sm text-amber-700">
+                            <li>&bull; Anonymisierung/Pseudonymisierung vor der KI-Verarbeitung</li>
+                            <li>&bull; Auftragsverarbeitungsvertrag (AVV) mit dem KI-Anbieter</li>
+                            <li>&bull; Lokale KI-Modelle als langfristige Option (z.B. Ollama)</li>
+                            <li>&bull; Einwilligung der Mandanten in der Vollmacht erg&auml;nzen</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-16">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <span class="font-bold text-white">BelegAI</span>
+            <span class="mx-2 text-slate-600">|</span>
+            <span class="text-sm">Demo f&uuml;r Steuerberatung Susanne Wei&szlig;</span>
+            <p class="mt-2 text-xs text-slate-500">Erstellt am 02.03.2026 &ndash; Alle gezeigten Daten sind fiktive Beispiele.</p>
+        </div>
+    </footer>
+
+    <script>
+    // ===========================
+    // TAB SWITCHING
+    // ===========================
+    function switchTab(tabName) {
+        const tabs = ['beleg', 'email', 'report', 'auto'];
+        tabs.forEach(t => {
+            document.getElementById('section-' + t).classList.toggle('hidden', t !== tabName);
+            document.getElementById('tab-' + t).className = t === tabName
+                ? 'px-4 py-4 text-sm tab-active transition-all'
+                : 'px-4 py-4 text-sm tab-inactive transition-all';
+        });
+    }
+
+    // ===========================
+    // TAB 1: BELEGERFASSUNG
+    // ===========================
+    const sampleInvoices = {
+        restaurant: {
+            filename: 'rechnung_goldener_hirsch.jpg',
+            preview: `╔══════════════════════════════════════════╗
+║    GASTHAUS ZUM GOLDENEN HIRSCH          ║
+║    Neustiftgasse 45, 1070 Wien           ║
+║    UID: ATU63284719                      ║
+╠══════════════════════════════════════════╣
+║  Datum: 14.02.2026                       ║
+║  Rechnungs-Nr: 2026-0287                 ║
+║                                          ║
+║  2x Wiener Schnitzel      € 29,80       ║
+║  1x Kaiserschmarrn         € 12,50       ║
+║  2x Spritzer               €  7,60       ║
+║  1x Espresso               €  3,20       ║
+║                          ─────────       ║
+║  Netto (10%):             € 48,27        ║
+║  USt 10%:                 €  4,83        ║
+║  Gesamt:                  € 53,10        ║
+║                                          ║
+║  Zahlungsart: Karte                      ║
+║  Vielen Dank f&uuml;r Ihren Besuch!         ║
+╚══════════════════════════════════════════╝`,
+            data: {
+                rechnungsnummer: '2026-0287',
+                datum: '14.02.2026',
+                lieferant: 'Gasthaus Zum Goldenen Hirsch',
+                adresse: 'Neustiftgasse 45, 1070 Wien',
+                uid: 'ATU63284719',
+                netto: '48,27',
+                ust_satz: '10%',
+                ust_betrag: '4,83',
+                brutto: '53,10',
+                zahlungsart: 'Karte',
+                waehrung: 'EUR'
+            },
+            booking: {
+                konto: '7110 - Bewirtungskosten',
+                gegenkonto: '2700 - Kassa/Bank',
+                text: 'Bewirtung Goldener Hirsch 14.02.',
+                hinweis: 'Bewirtungsbeleg: Geschäftlicher Anlass und Teilnehmer dokumentieren (§ 20 EStG).'
+            },
+            ustg: {
+                name_anschrift: true,
+                uid_nummer: true,
+                rechnungsnummer: true,
+                datum: true,
+                leistungsbeschreibung: true,
+                nettobetrag: true,
+                steuersatz: true,
+                steuerbetrag: true,
+                bruttobetrag: true
+            }
+        },
+        buero: {
+            filename: 'rechnung_pagro.pdf',
+            preview: `╔══════════════════════════════════════════╗
+║          PAGRO DISKONT                   ║
+║    Mariahilfer Str. 120, 1060 Wien       ║
+║    UID: ATU51249307                      ║
+╠══════════════════════════════════════════╣
+║  Rechnungsdatum: 28.01.2026              ║
+║  Beleg-Nr: F-2026-41829                  ║
+║                                          ║
+║  5x Ordner A4 breit         € 14,95     ║
+║  2x Druckerpapier 500Bl     € 11,98     ║
+║  1x Toner HP LaserJet       € 42,90     ║
+║  3x Kugelschreiber-Set      €  8,97     ║
+║                          ─────────       ║
+║  Netto (20%):             € 65,67        ║
+║  USt 20%:                 € 13,13        ║
+║  Gesamt:                  € 78,80        ║
+║                                          ║
+║  Bar bezahlt                             ║
+╚══════════════════════════════════════════╝`,
+            data: {
+                rechnungsnummer: 'F-2026-41829',
+                datum: '28.01.2026',
+                lieferant: 'Pagro Diskont',
+                adresse: 'Mariahilfer Str. 120, 1060 Wien',
+                uid: 'ATU51249307',
+                netto: '65,67',
+                ust_satz: '20%',
+                ust_betrag: '13,13',
+                brutto: '78,80',
+                zahlungsart: 'Bar',
+                waehrung: 'EUR'
+            },
+            booking: {
+                konto: '7600 - Büromaterial',
+                gegenkonto: '2700 - Kassa',
+                text: 'Büromaterial Pagro 28.01. (Ordner, Papier, Toner)',
+                hinweis: 'Vorsteuerabzug bei 20% USt möglich. Kleinbetragsrechnung bis €400 brutto: vereinfachte Angaben ausreichend.'
+            },
+            ustg: {
+                name_anschrift: true,
+                uid_nummer: true,
+                rechnungsnummer: true,
+                datum: true,
+                leistungsbeschreibung: true,
+                nettobetrag: true,
+                steuersatz: true,
+                steuerbetrag: true,
+                bruttobetrag: true
+            }
+        },
+        it: {
+            filename: 'rechnung_webdev.pdf',
+            preview: `╔══════════════════════════════════════════╗
+║      WebDev Solutions GmbH               ║
+║      Praterstraße 78/4, 1020 Wien        ║
+║      UID: ATU74891023                    ║
+║      FN 491827k, HG Wien                 ║
+╠══════════════════════════════════════════╣
+║  Rechnung Nr: WD-2026-0043               ║
+║  Rechnungsdatum: 20.02.2026              ║
+║  Leistungszeitraum: 01-28.02.2026        ║
+║                                          ║
+║  Website-Wartung Februar 2026            ║
+║    - Sicherheitsupdates (4 Std.)         ║
+║    - Content-Pflege (6 Std.)             ║
+║    - Performance-Optimierung (2 Std.)    ║
+║                                          ║
+║  12 Stunden à € 95,00    € 1.140,00     ║
+║                          ─────────       ║
+║  Netto:                  € 1.140,00      ║
+║  USt 20%:                €   228,00      ║
+║  Gesamt:                 € 1.368,00      ║
+║                                          ║
+║  Bankverbindung:                         ║
+║  IBAN: AT12 3456 7890 1234 5678          ║
+║  Zahlbar innerhalb 14 Tagen              ║
+║                                          ║
+║  ACHTUNG: UID des Empf&auml;ngers fehlt!    ║
+╚══════════════════════════════════════════╝`,
+            data: {
+                rechnungsnummer: 'WD-2026-0043',
+                datum: '20.02.2026',
+                lieferant: 'WebDev Solutions GmbH',
+                adresse: 'Praterstraße 78/4, 1020 Wien',
+                uid: 'ATU74891023',
+                netto: '1.140,00',
+                ust_satz: '20%',
+                ust_betrag: '228,00',
+                brutto: '1.368,00',
+                zahlungsart: 'Überweisung',
+                waehrung: 'EUR',
+                leistungszeitraum: '01.02.–28.02.2026'
+            },
+            booking: {
+                konto: '7340 - EDV-Aufwand / Webservices',
+                gegenkonto: '3300 - Verbindlichkeiten',
+                text: 'Website-Wartung Feb 2026, WebDev Solutions',
+                hinweis: 'Achtung: UID des Leistungsempfängers fehlt auf der Rechnung. Bei Rechnungen über €400 brutto Pflichtangabe gem. § 11 UStG. → Korrektur vom Lieferanten anfordern!'
+            },
+            ustg: {
+                name_anschrift: true,
+                uid_nummer: true,
+                rechnungsnummer: true,
+                datum: true,
+                leistungsbeschreibung: true,
+                nettobetrag: true,
+                steuersatz: true,
+                steuerbetrag: true,
+                bruttobetrag: false  // UID Empfänger fehlt
+            }
+        }
+    };
+
+    let currentInvoiceData = null;
+
+    function loadSample(type) {
+        const invoice = sampleInvoices[type];
+        currentInvoiceData = invoice;
+
+        // Show preview
+        const preview = document.getElementById('invoice-preview');
+        preview.classList.remove('hidden');
+        document.getElementById('preview-filename').textContent = invoice.filename;
+        document.getElementById('invoice-content').innerHTML =
+            '<div class="scan-line"></div><pre class="text-xs">' + invoice.preview + '</pre>';
+
+        // Hide previous results
+        document.getElementById('extraction-result').classList.add('hidden');
+        document.getElementById('ustg-validation').classList.add('hidden');
+        document.getElementById('booking-suggestion').classList.add('hidden');
+        document.getElementById('json-export').classList.add('hidden');
+
+        // Show processing
+        const status = document.getElementById('processing-status');
+        status.classList.remove('hidden');
+
+        // Simulate AI processing
+        setTimeout(() => {
+            status.classList.add('hidden');
+            showExtractionResult(invoice);
+        }, 2000);
+    }
+
+    function showExtractionResult(invoice) {
+        const d = invoice.data;
+
+        // Show extracted fields
+        const fieldsContainer = document.getElementById('extracted-fields');
+        fieldsContainer.innerHTML = '';
+        const fieldLabels = {
+            rechnungsnummer: 'Rechnungsnummer',
+            datum: 'Datum',
+            lieferant: 'Lieferant',
+            adresse: 'Adresse',
+            uid: 'UID-Nummer',
+            netto: 'Nettobetrag',
+            ust_satz: 'USt-Satz',
+            ust_betrag: 'USt-Betrag',
+            brutto: 'Bruttobetrag',
+            zahlungsart: 'Zahlungsart',
+            waehrung: 'Währung'
+        };
+        if (d.leistungszeitraum) fieldLabels.leistungszeitraum = 'Leistungszeitraum';
+
+        Object.keys(fieldLabels).forEach((key, idx) => {
+            if (!d[key]) return;
+            setTimeout(() => {
+                const row = document.createElement('div');
+                row.className = 'flex justify-between items-center py-2 border-b border-slate-100 fade-in';
+                const isAmount = ['netto', 'ust_betrag', 'brutto'].includes(key);
+                row.innerHTML = `
+                    <span class="text-xs font-semibold text-slate-500 uppercase">${fieldLabels[key]}</span>
+                    <span class="text-sm font-medium ${isAmount ? 'text-green-700 font-bold' : 'text-slate-800'}">${isAmount ? '€ ' + d[key] : d[key]}</span>
+                `;
+                fieldsContainer.appendChild(row);
+            }, idx * 100);
+        });
+
+        document.getElementById('extraction-result').classList.remove('hidden');
+
+        // Show UStG validation after extraction
+        setTimeout(() => showUStGValidation(invoice), Object.keys(fieldLabels).length * 100 + 300);
+    }
+
+    function showUStGValidation(invoice) {
+        const checks = invoice.ustg;
+        const container = document.getElementById('ustg-checks');
+        container.innerHTML = '';
+
+        const checkLabels = {
+            name_anschrift: 'Name und Anschrift des Leistenden',
+            uid_nummer: 'UID-Nummer des Leistenden',
+            rechnungsnummer: 'Fortlaufende Rechnungsnummer',
+            datum: 'Ausstellungsdatum',
+            leistungsbeschreibung: 'Art und Umfang der Leistung',
+            nettobetrag: 'Entgelt (Nettobetrag)',
+            steuersatz: 'Steuersatz',
+            steuerbetrag: 'Steuerbetrag',
+            bruttobetrag: 'UID des Empfängers (bei > €400)'
+        };
+
+        let allValid = true;
+        Object.entries(checkLabels).forEach(([key, label], idx) => {
+            const valid = checks[key];
+            if (!valid) allValid = false;
+            setTimeout(() => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 py-1.5 fade-in';
+                row.innerHTML = `
+                    <span class="${valid ? 'check-valid' : 'check-invalid'} text-lg">${valid ? '&#10003;' : '&#10007;'}</span>
+                    <span class="text-sm ${valid ? 'text-slate-600' : 'text-red-700 font-semibold'}">${label}</span>
+                    ${!valid ? '<span class="ml-auto text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">Fehlt!</span>' : ''}
+                `;
+                container.appendChild(row);
+            }, idx * 80);
+        });
+
+        const badge = document.getElementById('ustg-badge');
+        if (allValid) {
+            badge.className = 'text-xs px-2 py-0.5 rounded-full bg-green-500 text-white';
+            badge.textContent = 'Vollständig';
+        } else {
+            badge.className = 'text-xs px-2 py-0.5 rounded-full bg-red-500 text-white';
+            badge.textContent = 'Mangelhaft';
+        }
+
+        document.getElementById('ustg-validation').classList.remove('hidden');
+
+        // Show booking suggestion
+        setTimeout(() => showBookingSuggestion(invoice), Object.keys(checkLabels).length * 80 + 300);
+    }
+
+    function showBookingSuggestion(invoice) {
+        const b = invoice.booking;
+        const container = document.getElementById('booking-content');
+        container.innerHTML = `
+            <div class="space-y-3">
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-xs font-semibold text-slate-500">KONTO</span>
+                    <span class="text-sm font-medium text-blue-700">${b.konto}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-xs font-semibold text-slate-500">GEGENKONTO</span>
+                    <span class="text-sm font-medium text-slate-800">${b.gegenkonto}</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-slate-100">
+                    <span class="text-xs font-semibold text-slate-500">BUCHUNGSTEXT</span>
+                    <span class="text-sm font-medium text-slate-800">${b.text}</span>
+                </div>
+                ${b.hinweis ? `<div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+                    <p class="text-xs text-amber-800"><strong>Hinweis:</strong> ${b.hinweis}</p>
+                </div>` : ''}
+            </div>
+        `;
+        document.getElementById('booking-suggestion').classList.remove('hidden');
+
+        // Show JSON
+        setTimeout(() => showJSON(invoice), 400);
+    }
+
+    function showJSON(invoice) {
+        const d = invoice.data;
+        const jsonObj = {
+            rechnungsnummer: d.rechnungsnummer,
+            datum: d.datum,
+            lieferant: d.lieferant,
+            uid: d.uid,
+            netto: parseFloat(d.netto.replace('.', '').replace(',', '.')),
+            ust_satz: parseFloat(d.ust_satz),
+            ust_betrag: parseFloat(d.ust_betrag.replace('.', '').replace(',', '.')),
+            brutto: parseFloat(d.brutto.replace('.', '').replace(',', '.')),
+            konto: invoice.booking.konto,
+            ustg_konform: Object.values(invoice.ustg).every(v => v)
+        };
+        document.getElementById('json-output').textContent = JSON.stringify(jsonObj, null, 2);
+        document.getElementById('json-export').classList.remove('hidden');
+    }
+
+    function copyJSON() {
+        const text = document.getElementById('json-output').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('#json-export button');
+            btn.textContent = 'Kopiert!';
+            setTimeout(() => btn.textContent = 'Kopieren', 2000);
+        });
+    }
+
+    function handleDrop(event) {
+        const files = event.dataTransfer.files;
+        if (files.length > 0) simulateCustomUpload(files[0].name);
+    }
+
+    function handleFileSelect(event) {
+        const files = event.target.files;
+        if (files.length > 0) simulateCustomUpload(files[0].name);
+    }
+
+    function simulateCustomUpload(filename) {
+        // For demo purposes, load the restaurant sample
+        document.getElementById('preview-filename').textContent = filename;
+        loadSample('restaurant');
+    }
+
+    // ===========================
+    // TAB 2: SCHRIFTVERKEHR
+    // ===========================
+    const emailTemplates = {
+        unterlagen: {
+            subject: 'Fehlende Unterlagen für Q1/2026 – bitte um Zusendung',
+            body: `Liebe/r [Mandantenname],
+
+ich hoffe, es geht Ihnen gut!
+
+Für die Bearbeitung Ihrer Buchhaltung Q1/2026 fehlen mir noch folgende Unterlagen:
+
+- Bankauszüge Jänner bis März 2026
+- Ausgangsrechnungen (falls nicht bereits übermittelt)
+- Bewirtungsbelege mit Angabe des Geschäftszwecks
+- Fahrtenbuch (sofern Kfz betrieblich genutzt)
+
+Könnten Sie mir diese bitte bis zum [Datum] zukommen lassen? Sie können die Belege einfach eingescannt per E-Mail senden oder als Fotos über Ihr Handy.
+
+Tipp: Am besten alle Belege nach Datum sortiert in einem Ordner ablegen – das spart uns beiden Zeit und Ihnen Kosten.
+
+Bei Fragen stehe ich Ihnen jederzeit gerne zur Verfügung.
+
+Beste Grüße
+Susanne Weiß
+Steuerberaterin`
+        },
+        fristen: {
+            subject: 'Erinnerung: Frist USt-Voranmeldung / ESt-Erklärung',
+            body: `Liebe/r [Mandantenname],
+
+ich möchte Sie auf folgende anstehende Fristen hinweisen:
+
+USt-Voranmeldung Q1/2026:
+→ Fällig am 15. Mai 2026
+→ Benötigte Unterlagen: alle Ein- und Ausgangsrechnungen Q1
+
+Einkommensteuer-Vorauszahlung Q1/2026:
+→ Fällig am 15. Mai 2026
+→ Betrag laut letztem Bescheid: € [Betrag]
+
+Damit ich alles rechtzeitig einreichen kann, bitte ich Sie, mir Ihre Unterlagen spätestens bis zum 30. April zukommen zu lassen.
+
+Falls sich bei Ihrem Einkommen wesentliche Änderungen ergeben haben (z.B. neue Aufträge, Investitionen, längere Pausen), lassen Sie es mich bitte wissen – eine Anpassung der Vorauszahlung ist möglich.
+
+Herzliche Grüße
+Susanne Weiß
+Steuerberaterin`
+        },
+        rueckfrage: {
+            subject: 'Rückfrage zu einer Rechnung – bitte um Klärung',
+            body: `Liebe/r [Mandantenname],
+
+bei der Durchsicht Ihrer Belege ist mir eine Rechnung aufgefallen, die ich noch klären muss:
+
+Rechnung: [Lieferant / Datum / Betrag]
+Problem: [z.B. "Fehlende UID-Nummer" / "Leistungsbeschreibung unklar"]
+
+Für den Vorsteuerabzug benötige ich eine ordnungsgemäße Rechnung mit allen Pflichtangaben nach § 11 UStG. Könnten Sie den Lieferanten bitte um eine korrigierte Rechnung bitten?
+
+Was die Rechnung enthalten muss:
+✓ Name und Anschrift des Lieferanten
+✓ UID-Nummer des Lieferanten
+✓ Fortlaufende Rechnungsnummer
+✓ Datum
+✓ Leistungsbeschreibung
+✓ Nettobetrag, Steuersatz und Steuerbetrag
+✓ Bei Rechnungen über €400: auch Ihre UID-Nummer
+
+Ich helfe Ihnen gerne, wenn Sie unsicher sind, wie Sie die Korrektur anfragen sollen.
+
+Beste Grüße
+Susanne Weiß
+Steuerberaterin`
+        },
+        quartal: {
+            subject: 'Checkliste: Was ich zum Quartalsende von Ihnen brauche',
+            body: `Liebe/r [Mandantenname],
+
+das Quartal neigt sich dem Ende zu! Damit ich Ihre Buchhaltung zeitnah und kostengünstig erledigen kann, hier Ihre Checkliste:
+
+UNBEDINGT NÖTIG:
+□ Alle Eingangsrechnungen (Einkäufe, Dienstleistungen)
+□ Alle Ausgangsrechnungen (Ihre Honorarnoten)
+□ Bankauszüge des Quartals
+□ Barbelege mit Notiz zum Geschäftszweck
+
+FALLS ZUTREFFEND:
+□ Fahrtenbuch / Km-Aufzeichnungen
+□ Bewirtungsbelege mit Teilnehmer + Anlass
+□ Reisekostenabrechnungen
+□ Neue Verträge (Miete, Leasing, Versicherung)
+
+SO SENDEN SIE AM BESTEN:
+→ Fotos oder Scans per E-Mail an: kanzlei@weiss-stb.at
+→ Bitte nach Datum sortieren
+→ Unleserliche Belege kurz beschriften
+
+Deadline: Bitte bis spätestens [Datum] zusenden.
+
+Tipp: Wenn Sie die Belege laufend (z.B. wöchentlich) schicken, bleibt der Aufwand für uns beide überschaubar!
+
+Herzliche Grüße
+Susanne Weiß
+Steuerberaterin`
+        },
+        willkommen: {
+            subject: 'Willkommen in unserer Kanzlei – die ersten Schritte',
+            body: `Liebe/r [Mandantenname],
+
+herzlich willkommen in unserer Kanzlei! Ich freue mich auf die Zusammenarbeit.
+
+Damit wir reibungslos starten können, hier die wichtigsten Informationen für Sie:
+
+WAS ICH VON IHNEN BRAUCHE:
+1. Kopie Ihres Gewerbescheins bzw. Meldung ans Finanzamt
+2. Steuernummer und UID-Nummer (falls vorhanden)
+3. Letzte Steuererklärung / Steuerbescheid
+4. Bankauszüge der letzten 3 Monate
+5. Offene Rechnungen (Eingang + Ausgang)
+
+WIE WIR ZUSAMMENARBEITEN:
+- Belege können Sie mir jederzeit per E-Mail als Foto/Scan schicken
+- Ich erstelle Ihre Buchhaltung quartalsweise
+- USt-Voranmeldungen reiche ich automatisch ein
+- Erreichbar bin ich per E-Mail oder telefonisch (Mo–Do 9–16 Uhr)
+
+IHRE PFLICHTEN ALS FREIBERUFLER/IN:
+- Alle Einnahmen und Ausgaben mit Belegen dokumentieren
+- Rechnungen mit allen Pflichtangaben ausstellen
+- Belege 7 Jahre aufbewahren (digital genügt)
+
+Bei Fragen bin ich jederzeit für Sie da. Lassen Sie uns am besten einen kurzen Kennenlern-Termin vereinbaren.
+
+Herzliche Grüße
+Susanne Weiß
+Steuerberaterin
+
+P.S.: Einen Leitfaden zur Belegorganisation lege ich bei – damit sparen wir beide Zeit!`
+        }
+    };
+
+    function loadEmailTemplate(type) {
+        const template = emailTemplates[type];
+
+        document.getElementById('email-placeholder').classList.add('hidden');
+        document.getElementById('email-editor').classList.remove('hidden');
+
+        document.getElementById('email-subject').value = template.subject;
+        document.getElementById('email-body').value = template.body;
+
+        // Highlight active button
+        document.querySelectorAll('.email-template-btn').forEach(btn => {
+            btn.classList.remove('border-green-400', 'bg-green-50');
+        });
+        event.currentTarget.classList.add('border-green-400', 'bg-green-50');
+    }
+
+    function copyEmail() {
+        const subject = document.getElementById('email-subject').value;
+        const body = document.getElementById('email-body').value;
+        navigator.clipboard.writeText('Betreff: ' + subject + '\n\n' + body).then(() => {
+            const btns = document.querySelectorAll('#email-editor button');
+            btns[0].textContent = 'Kopiert!';
+            setTimeout(() => btns[0].textContent = 'Kopieren', 2000);
+        });
+    }
+
+    // ===========================
+    // TAB 3: AUSWERTUNGEN
+    // ===========================
+    const reportData = [
+        { datum: '05.01.2026', kategorie: 'Büromaterial', partner: 'Pagro Diskont', netto: 65.67, ust: 13.13 },
+        { datum: '12.01.2026', kategorie: 'Telekommunikation', partner: 'A1 Telekom', netto: 29.17, ust: 5.83 },
+        { datum: '15.01.2026', kategorie: 'Software', partner: 'Adobe Creative Cloud', netto: 49.58, ust: 9.92 },
+        { datum: '20.01.2026', kategorie: 'Fahrtkosten', partner: 'ÖBB', netto: 23.60, ust: 2.36 },
+        { datum: '03.02.2026', kategorie: 'Fotoequipment', partner: 'Foto Leutner', netto: 289.00, ust: 57.80 },
+        { datum: '10.02.2026', kategorie: 'Bewirtung', partner: 'Café Landtmann', netto: 34.55, ust: 3.45 },
+        { datum: '14.02.2026', kategorie: 'Fortbildung', partner: 'Photoacademy Wien', netto: 190.00, ust: 38.00 },
+        { datum: '22.02.2026', kategorie: 'Software', partner: 'Adobe Creative Cloud', netto: 49.58, ust: 9.92 },
+        { datum: '01.03.2026', kategorie: 'Versicherung', partner: 'SVS Beitrag', netto: 165.32, ust: 0.00 },
+        { datum: '02.03.2026', kategorie: 'Büromaterial', partner: 'Amazon.de', netto: 42.90, ust: 8.58 },
+    ];
+
+    // Populate report table
+    function initReportTable() {
+        const tbody = document.getElementById('report-table-body');
+        let totalNetto = 0, totalUst = 0;
+        reportData.forEach(row => {
+            totalNetto += row.netto;
+            totalUst += row.ust;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="px-4 py-2 text-slate-600">${row.datum}</td>
+                <td class="px-4 py-2"><span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">${row.kategorie}</span></td>
+                <td class="px-4 py-2 text-slate-700">${row.partner}</td>
+                <td class="px-4 py-2 text-right text-slate-800 font-medium">€ ${row.netto.toFixed(2)}</td>
+                <td class="px-4 py-2 text-right text-slate-500">€ ${row.ust.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+        document.getElementById('report-total-netto').textContent = '€ ' + totalNetto.toFixed(2);
+        document.getElementById('report-total-ust').textContent = '€ ' + totalUst.toFixed(2);
+    }
+
+    const analysisTexts = {
+        auffaellig: {
+            title: 'KI-Analyse: „Was fällt auf?"',
+            color: 'bg-green-700',
+            content: `Analyse der Ausgaben Q1/2026 – Lisa Müller (Fotografin)
+
+AUFFÄLLIGKEITEN:
+
+1. Doppelte Software-Kosten
+   Adobe Creative Cloud erscheint im Jänner UND Februar mit identischem Betrag (€49,58). Das ist korrekt bei monatlichem Abo – aber prüfen Sie, ob ein Jahresabo günstiger wäre (Ersparnis ca. €100/Jahr).
+
+2. SVS-Beitrag ohne USt
+   Der SVS-Beitrag (€165,32) hat keinen Vorsteuerabzug – korrekt, da Sozialversicherungsbeiträge umsatzsteuerbefreit sind. Aber: Ist der Betrag aktuell? Die SVS passt Beiträge quartalsweise an.
+
+3. Fotoequipment-Investition
+   Die Anschaffung bei Foto Leutner (€289,00 netto) liegt unter der GWG-Grenze von €1.000. Kann sofort als Betriebsausgabe abgesetzt werden – keine Abschreibung nötig.
+
+4. Bewirtungskosten
+   Café Landtmann (€34,55): Bitte sicherstellen, dass Anlass und Teilnehmer dokumentiert sind. Ohne Nachweis des geschäftlichen Anlasses ist kein Betriebsausgabenabzug möglich.
+
+5. Ausgabenverteilung
+   Größte Position: Fotoequipment (31%). Wiederkehrend: Software (11%), Büromaterial (12%). Einmalig: Fortbildung (20%).
+
+EMPFEHLUNG:
+Laufende monatliche Fixkosten (Software, Telekom) automatisch verbuchen lassen – spart ca. 15 Min/Monat.`
+        },
+        quartalsbericht: {
+            title: 'Quartalsbericht Q1/2026 – Lisa Müller',
+            color: 'bg-blue-600',
+            content: `QUARTALSBERICHT Q1/2026
+Mandantin: Lisa Müller, Freiberufliche Fotografin
+
+ZUSAMMENFASSUNG:
+Im ersten Quartal 2026 belaufen sich die erfassten Betriebsausgaben auf insgesamt €939,37 netto (€1.088,36 brutto). Der Vorsteueranspruch beträgt €148,99.
+
+AUSGABEN NACH KATEGORIE:
+  Fotoequipment     €  289,00  (30,8%)
+  Fortbildung       €  190,00  (20,2%)
+  SVS-Beitrag       €  165,32  (17,6%)
+  Büromaterial       €  108,57  (11,6%)
+  Software           €   99,16  (10,6%)
+  Bewirtung          €   34,55   (3,7%)
+  Telekommunikation  €   29,17   (3,1%)
+  Fahrtkosten        €   23,60   (2,5%)
+
+UMSATZSTEUER:
+  Vorsteuer gesamt:  € 148,99
+  Davon abzugsfähig: € 148,99
+  (SVS-Beitrag: kein VSt-Abzug)
+
+VERGLEICH VORQUARTAL:
+  Keine Vergleichsdaten vorhanden (Ersterfassung).
+
+HINWEISE FÜR DIE MANDANTIN:
+  - Belegorganisation: Alle Belege vollständig und fristgerecht geliefert ✓
+  - Offene Punkte: Geschäftsanlass für Bewirtung dokumentieren
+  - Nächste Frist: USt-Voranmeldung Q1 am 15.05.2026`
+        },
+        optimierung: {
+            title: 'Optimierungstipps für Lisa Müller',
+            color: 'bg-slate-700',
+            content: `STEUERLICHE OPTIMIERUNGSMÖGLICHKEITEN
+
+Basierend auf der Analyse der Q1/2026-Daten:
+
+1. GEWINNFREIBETRAG NUTZEN
+   Als Freiberuflerin steht Lisa der Gewinnfreibetrag (GFB) zu:
+   - Grundfreibetrag: 15% des Gewinns (bis €33.000)
+   - Investitionsbedingter GFB: zusätzlich möglich bei Anschaffungen
+   → Empfehlung: Geplante Investitionen (z.B. Kameraequipment) ins laufende Jahr ziehen.
+
+2. ADOBE-ABO OPTIMIEREN
+   Monatlich: €49,58 × 12 = €594,96/Jahr
+   Jahresabo: ca. €494,00/Jahr
+   → Potenzielle Ersparnis: ~€100/Jahr
+
+3. HOMEOFFICE-PAUSCHALE
+   Falls Lisa von zu Hause arbeitet: Bis zu €1.200/Jahr als Pauschale absetzbar (seit 2023). Keine Belege nötig – nur Nachweis der Tätigkeit.
+
+4. FAHRTKOSTEN-DOKUMENTATION
+   Aktuell nur eine ÖBB-Fahrt erfasst. Werden regelmäßig Kunden besucht?
+   → Fahrtenbuch führen oder Km-Geld (€0,42/km) geltend machen.
+
+5. FORTBILDUNGSKOSTEN AUSBAUEN
+   Fortbildung ist voll absetzbar. Als Fotografin kommen in Frage:
+   - Workshops, Seminare
+   - Fachliteratur, Online-Kurse
+   - Messen und Branchenevents
+
+6. KLEINUNTERNEHMERREGELUNG PRÜFEN
+   Falls Jahresumsatz unter €42.000 (ab 2025): USt-Befreiung möglich.
+   Vorteil: Weniger Verwaltung. Nachteil: Kein Vorsteuerabzug.
+   → Abwägung sinnvoll, wenn Investitionen gering sind.
+
+NÄCHSTER SCHRITT:
+Termin zur Jahresplanung vereinbaren, um Investitionen und Freibeträge optimal zu nutzen.`
+        }
+    };
+
+    function generateAnalysis(type) {
+        const analysis = analysisTexts[type];
+
+        document.getElementById('analysis-placeholder').classList.add('hidden');
+        const result = document.getElementById('analysis-result');
+        result.classList.remove('hidden');
+
+        document.getElementById('analysis-header').className = analysis.color + ' text-white px-5 py-3';
+        document.getElementById('analysis-title').textContent = analysis.title;
+
+        // Simulate typing effect
+        const content = document.getElementById('analysis-content');
+        content.textContent = '';
+        const text = analysis.content;
+        let i = 0;
+        const interval = setInterval(() => {
+            content.textContent += text.substring(i, i + 3);
+            i += 3;
+            if (i >= text.length) {
+                clearInterval(interval);
+                content.textContent = text;
+            }
+        }, 5);
+    }
+
+    // ===========================
+    // INIT
+    // ===========================
+    initReportTable();
+    </script>
+</body>
+</html>
