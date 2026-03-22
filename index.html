@@ -965,6 +965,27 @@
             document.getElementById('results-section').classList.add('hidden');
             analysisResults = [];
 
+            // API-Erreichbarkeits-Check
+            try {
+                progressText.textContent = 'Prüfe API-Verbindung...';
+                const testResponse = await fetch('/api/analyze', {
+                    method: 'OPTIONS'
+                });
+                // Wenn wir eine HTML-Seite zurückbekommen (z.B. GitHub Pages 404), ist die API nicht verfügbar
+                const contentType = testResponse.headers.get('content-type') || '';
+                if (contentType.includes('text/html')) {
+                    throw new Error('API nicht verfügbar');
+                }
+            } catch (apiCheckErr) {
+                console.error('API-Check fehlgeschlagen:', apiCheckErr);
+                progress.classList.add('hidden');
+                btn.disabled = false;
+                btnText.textContent = 'Belege auswerten';
+                btnIcon.textContent = '🔍';
+                showError('Die KI-Analyse-API ist nicht erreichbar. Diese Funktion benötigt ein Netlify-Deployment mit konfiguriertem CLAUDE_API_KEY. Auf GitHub Pages funktioniert die Analyse nicht. Bitte die Seite über Netlify aufrufen.');
+                return;
+            }
+
             const total = uploadedFiles.length;
 
             for (let i = 0; i < total; i++) {
@@ -1020,10 +1041,16 @@ Falls der Beleg nicht lesbar ist oder keine Rechnung/Beleg darstellt, gib trotzd
 
                     if (!response.ok) {
                         const err = await response.json().catch(() => ({}));
-                        throw new Error(err.error?.message || err.error || `API Fehler: ${response.status}`);
+                        const errMsg = err.error?.message || err.error || `API Fehler: ${response.status}`;
+                        throw new Error(errMsg || 'Unbekannter API-Fehler');
                     }
 
                     const data = await response.json();
+
+                    if (!data.content || !data.content[0] || !data.content[0].text) {
+                        throw new Error('Ungültige API-Antwort: Kein Text-Inhalt erhalten');
+                    }
+
                     const text = data.content[0].text;
 
                     // Parse JSON from response (handle markdown code blocks)
@@ -1039,24 +1066,35 @@ Falls der Beleg nicht lesbar ist oder keine Rechnung/Beleg darstellt, gib trotzd
 
                 } catch (err) {
                     console.error(`Fehler bei ${file.name}:`, err);
+                    const errorMsg = err.message || 'Unbekannter Fehler';
                     analysisResults.push({
                         _filename: file.name,
                         _filesize: file.size,
-                        _error: err.message,
+                        _error: errorMsg,
                         datum: null, partner: null, brutto: null, netto: null,
                         mwst_satz: null, mwst_betrag: null, uid: null,
                         reverse_charge: false, ig_erwerb: false, kleinunternehmer: false,
-                        uva_kz: null, beschreibung: 'Fehler: ' + err.message
+                        uva_kz: null, beschreibung: 'Fehler: ' + errorMsg
                     });
                 }
 
                 progressBar.style.width = `${((i + 1) / total) * 100}%`;
             }
 
-            progressText.textContent = 'Auswertung abgeschlossen!';
+            // Fortschrittsanzeige verstecken und Status aktualisieren
+            progress.classList.add('hidden');
             btn.disabled = false;
             btnText.textContent = 'Erneut auswerten';
             btnIcon.textContent = '🔄';
+
+            // Fehlermeldung anzeigen wenn alle fehlgeschlagen
+            const errorCount = analysisResults.filter(r => r._error).length;
+            if (errorCount === total) {
+                const firstError = analysisResults[0]._error;
+                showError(`Alle ${total} Belege konnten nicht ausgewertet werden. Fehler: ${firstError}`);
+            } else if (errorCount > 0) {
+                showError(`${errorCount} von ${total} Belegen konnten nicht ausgewertet werden.`);
+            }
 
             displayResults();
         }
@@ -1105,12 +1143,13 @@ Falls der Beleg nicht lesbar ist oder keine Rechnung/Beleg darstellt, gib trotzd
             analysisResults.forEach((r, idx) => {
                 const isError = !!r._error;
                 const rowClass = isError ? 'bg-red-50' : (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50');
+                const errorTitle = isError ? ` title="Fehler: ${r._error}"` : '';
                 tbody.innerHTML += `
-                    <tr class="${rowClass} hover:bg-green-50 transition-colors">
+                    <tr class="${rowClass} ${isError ? 'hover:bg-red-100' : 'hover:bg-green-50'} transition-colors"${errorTitle}>
                         <td class="px-4 py-2.5 text-slate-400">${idx + 1}</td>
-                        <td class="px-4 py-2.5 font-medium text-slate-700 max-w-[150px] truncate" title="${r._filename}">${r._filename}</td>
-                        <td class="px-4 py-2.5">${r.datum || '—'}</td>
-                        <td class="px-4 py-2.5">${r.partner || '—'}</td>
+                        <td class="px-4 py-2.5 font-medium ${isError ? 'text-red-700' : 'text-slate-700'} max-w-[150px] truncate" title="${r._filename}${isError ? ' — FEHLER: ' + r._error : ''}">${r._filename}${isError ? ' ❌' : ''}</td>
+                        <td class="px-4 py-2.5">${isError ? '<span class="text-red-500 text-xs">Fehler</span>' : (r.datum || '—')}</td>
+                        <td class="px-4 py-2.5">${isError ? '<span class="text-red-500 text-xs truncate max-w-[200px] inline-block">' + r._error + '</span>' : (r.partner || '—')}</td>
                         <td class="px-4 py-2.5 text-right font-mono">${r.brutto != null ? '€ ' + Number(r.brutto).toFixed(2) : '—'}</td>
                         <td class="px-4 py-2.5 text-right font-mono">${r.netto != null ? '€ ' + Number(r.netto).toFixed(2) : '—'}</td>
                         <td class="px-4 py-2.5 text-right">${r.mwst_satz != null ? r.mwst_satz + '%' : '—'}</td>
