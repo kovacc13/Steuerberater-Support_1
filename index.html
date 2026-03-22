@@ -65,6 +65,7 @@
                     <button onclick="scrollToSection('mission')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Mission</button>
                     <button onclick="scrollToSection('simulation')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Simulation</button>
                     <button onclick="scrollToSection('workflow')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Workflow</button>
+                    <button onclick="scrollToSection('upload')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Upload</button>
                     <button onclick="scrollToSection('analysis')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Mehrwert</button>
                     <button onclick="scrollToSection('strategy')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Strategie</button>
                 </div>
@@ -207,6 +208,66 @@
 }</pre>
                         </div>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2b: Upload-Bereich -->
+        <section id="upload" class="scroll-mt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Belege erfassen</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Kamera, Datei oder ganzer Ordner</p>
+                <p class="mt-4 text-lg text-slate-500">Belege direkt abfotografieren oder als Dateien hochladen — einzeln oder gleich einen ganzen Ordner.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Kamera -->
+                <div class="glass-panel rounded-2xl p-8 text-center">
+                    <div class="text-5xl mb-4">📸</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Kamera / Foto</h3>
+                    <p class="text-sm text-slate-500 mb-6">Beleg direkt mit dem Smartphone oder Webcam abfotografieren.</p>
+                    <label class="inline-flex items-center gap-2 cursor-pointer bg-green-700 hover:bg-green-800 text-white rounded-lg px-6 py-3 font-medium transition-colors">
+                        <span>Foto aufnehmen</span>
+                        <input type="file" accept="image/*" capture="environment" class="hidden" id="camera-input">
+                    </label>
+                    <div id="camera-preview" class="mt-6 hidden">
+                        <img id="camera-img" class="max-h-48 mx-auto rounded-lg shadow-md border border-slate-200" alt="Beleg-Vorschau">
+                        <p class="text-xs text-green-600 font-semibold mt-2">Beleg erkannt — bereit zur KI-Verarbeitung</p>
+                    </div>
+                </div>
+
+                <!-- Datei / Ordner Upload -->
+                <div class="glass-panel rounded-2xl p-8 text-center">
+                    <div class="text-5xl mb-4">📁</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Dateien & Ordner</h3>
+                    <p class="text-sm text-slate-500 mb-6">PDF, Bilder oder einen ganzen Beleg-Ordner auf einmal hochladen.</p>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-8 mb-4 transition-colors hover:border-green-500 hover:bg-green-50 cursor-pointer">
+                        <div class="text-3xl mb-2">⬆️</div>
+                        <p class="text-sm text-slate-500">Dateien hierher ziehen oder klicken</p>
+                        <input type="file" multiple accept="image/*,.pdf,.jpg,.jpeg,.png,.tiff" class="hidden" id="file-input">
+                    </div>
+                    <div class="flex gap-3 justify-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors">
+                            <span>Dateien wählen</span>
+                            <input type="file" multiple accept="image/*,.pdf,.jpg,.jpeg,.png,.tiff" class="hidden" id="files-btn">
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-700 hover:bg-slate-800 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors">
+                            <span>Ordner wählen</span>
+                            <input type="file" webkitdirectory directory class="hidden" id="folder-btn">
+                        </label>
+                    </div>
+                    <div id="file-list" class="mt-6 text-left space-y-2 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Upload-Ergebnis -->
+            <div id="upload-result" class="mt-8 glass-panel rounded-2xl p-6 hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold">✓</div>
+                    <h4 class="font-bold text-slate-800">Hochgeladene Belege</h4>
+                    <span id="upload-count" class="text-sm text-slate-500"></span>
+                </div>
+                <div id="upload-summary" class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                 </div>
             </div>
         </section>
@@ -415,6 +476,80 @@
         
         initChaos();
         calculateROI();
+
+        // --- UPLOAD LOGIC ---
+        const cameraInput = document.getElementById('camera-input');
+        const cameraPreview = document.getElementById('camera-preview');
+        const cameraImg = document.getElementById('camera-img');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const filesBtn = document.getElementById('files-btn');
+        const folderBtn = document.getElementById('folder-btn');
+        const fileList = document.getElementById('file-list');
+        const uploadResult = document.getElementById('upload-result');
+        const uploadCount = document.getElementById('upload-count');
+        const uploadSummary = document.getElementById('upload-summary');
+
+        let uploadedFiles = [];
+
+        cameraInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                cameraImg.src = url;
+                cameraPreview.classList.remove('hidden');
+                addToUploaded([file]);
+            }
+        });
+
+        function handleFiles(files) {
+            const validFiles = Array.from(files).filter(f =>
+                f.type.startsWith('image/') || f.type === 'application/pdf'
+            );
+            if (validFiles.length > 0) {
+                addToUploaded(validFiles);
+                showFileList(validFiles);
+            }
+        }
+
+        filesBtn.addEventListener('change', (e) => handleFiles(e.target.files));
+        folderBtn.addEventListener('change', (e) => handleFiles(e.target.files));
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-green-500', 'bg-green-50'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-green-500', 'bg-green-50'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-green-500', 'bg-green-50');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function showFileList(files) {
+            fileList.classList.remove('hidden');
+            files.forEach(f => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 text-sm bg-slate-50 p-2 rounded border-l-4 border-blue-400';
+                const icon = f.type === 'application/pdf' ? '📄' : '🖼️';
+                const size = (f.size / 1024).toFixed(0);
+                row.innerHTML = `<span>${icon}</span><span class="flex-1 truncate">${f.name}</span><span class="text-slate-400">${size} KB</span><span class="text-green-600">✓</span>`;
+                fileList.appendChild(row);
+            });
+        }
+
+        function addToUploaded(files) {
+            uploadedFiles = uploadedFiles.concat(Array.from(files));
+            uploadResult.classList.remove('hidden');
+            uploadCount.textContent = `${uploadedFiles.length} Beleg(e) bereit`;
+            const images = uploadedFiles.filter(f => f.type.startsWith('image/')).length;
+            const pdfs = uploadedFiles.filter(f => f.type === 'application/pdf').length;
+            uploadSummary.innerHTML = `
+                <div class="bg-green-50 p-3 rounded-lg"><div class="text-2xl font-bold text-green-700">${uploadedFiles.length}</div><div class="text-xs text-slate-500">Gesamt</div></div>
+                <div class="bg-blue-50 p-3 rounded-lg"><div class="text-2xl font-bold text-blue-700">${images}</div><div class="text-xs text-slate-500">Fotos/Bilder</div></div>
+                <div class="bg-orange-50 p-3 rounded-lg"><div class="text-2xl font-bold text-orange-700">${pdfs}</div><div class="text-xs text-slate-500">PDFs</div></div>
+                <div class="bg-slate-50 p-3 rounded-lg"><div class="text-2xl font-bold text-slate-700">${(uploadedFiles.reduce((a,f) => a+f.size, 0)/1024/1024).toFixed(1)} MB</div><div class="text-xs text-slate-500">Gesamtgröße</div></div>
+            `;
+        }
 
         // JSON Animation
         const jsonPreview = document.getElementById('json-preview');
