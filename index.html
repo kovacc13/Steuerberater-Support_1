@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strategie-Dashboard: Steuerberatung 4.0 Steiermark</title>
+    <title>Strategie-Dashboard: Steuerberatung 4.0 Österreich</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -58,13 +58,15 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center gap-2">
                         <span class="text-2xl">🤖</span>
-                        <span class="font-bold text-xl text-slate-800 tracking-tight">TaxAuto<span class="text-green-700">Styria</span></span>
+                        <span class="font-bold text-xl text-slate-800 tracking-tight">TaxAuto<span class="text-green-700">Austria</span></span>
                     </div>
                 </div>
                 <div class="hidden md:flex items-center space-x-4">
                     <button onclick="scrollToSection('mission')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Mission</button>
                     <button onclick="scrollToSection('simulation')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Simulation</button>
                     <button onclick="scrollToSection('workflow')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Workflow</button>
+                    <button onclick="scrollToSection('upload')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Upload</button>
+                    <button onclick="scrollToSection('steuerrecht')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Steuerrecht</button>
                     <button onclick="scrollToSection('analysis')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Mehrwert</button>
                     <button onclick="scrollToSection('strategy')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Strategie</button>
                 </div>
@@ -83,7 +85,7 @@
                             <span class="block text-green-700 xl:inline">Schuhschachtel.</span>
                         </h1>
                         <p class="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                            Ihre Strategie zur digitalen Transformation der steirischen Steuerberatung. Wir nutzen <strong>Claude AI</strong> & <strong>Excel</strong>, um Belegchaos in strukturierte Import-Daten zu verwandeln.
+                            Ihre Strategie zur digitalen Transformation der österreichischen Steuerberatung. Wir nutzen <strong>Claude AI</strong> & <strong>Excel</strong>, um Belegchaos in strukturierte Import-Daten zu verwandeln.
                         </p>
                         <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                             <div class="rounded-md shadow">
@@ -196,18 +198,370 @@
                     </div>
                     <div class="space-y-4">
                         <p class="text-slate-400">// System Prompt</p>
-                        <p class="text-green-400">"Extrahiere aus diesem Beleg: Datum, Brutto, Netto, MwSt-Satz (10, 13, 20), Partner und UID. Formatiere als JSON..."</p>
+                        <p class="text-green-400">"Extrahiere aus diesem Beleg: Datum, Brutto, Netto, MwSt-Satz, Partner, UID, Reverse Charge, IG-Erwerb, Kleinunternehmer-Status. Formatiere als JSON..."</p>
                         <div class="bg-slate-800 p-4 rounded-lg">
                             <pre id="json-preview">{
   "datum": "2024-05-15",
-  "partner": "Billa Graz",
+  "partner": "Billa",
   "brutto": 45.90,
-  "mwst_satz": 10.0,
-  "uid": "ATU12345678"
+  "netto": 41.73,
+  "mwst_satz": 10,
+  "mwst_betrag": 4.17,
+  "uid": "ATU12345678",
+  "reverse_charge": false,
+  "ig_erwerb": false,
+  "kleinunternehmer": false,
+  "uva_kz": "001"
 }</pre>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2b: Upload-Bereich -->
+        <section id="upload" class="scroll-mt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Belege erfassen</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Kamera, Datei oder ganzer Ordner</p>
+                <p class="mt-4 text-lg text-slate-500">Belege direkt abfotografieren oder als Dateien hochladen — einzeln oder gleich einen ganzen Ordner.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Kamera -->
+                <div class="glass-panel rounded-2xl p-8 text-center">
+                    <div class="text-5xl mb-4">📸</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Kamera / Foto</h3>
+                    <p class="text-sm text-slate-500 mb-6">Beleg direkt mit dem Smartphone oder Webcam abfotografieren.</p>
+                    <label class="inline-flex items-center gap-2 cursor-pointer bg-green-700 hover:bg-green-800 text-white rounded-lg px-6 py-3 font-medium transition-colors">
+                        <span>Foto aufnehmen</span>
+                        <input type="file" accept="image/*" capture="environment" class="hidden" id="camera-input">
+                    </label>
+                    <div id="camera-preview" class="mt-6 hidden">
+                        <img id="camera-img" class="max-h-48 mx-auto rounded-lg shadow-md border border-slate-200" alt="Beleg-Vorschau">
+                        <p class="text-xs text-green-600 font-semibold mt-2">Beleg erkannt — bereit zur KI-Verarbeitung</p>
+                    </div>
+                </div>
+
+                <!-- Datei / Ordner Upload -->
+                <div class="glass-panel rounded-2xl p-8 text-center">
+                    <div class="text-5xl mb-4">📁</div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Dateien & Ordner</h3>
+                    <p class="text-sm text-slate-500 mb-6">PDF, Bilder oder einen ganzen Beleg-Ordner auf einmal hochladen.</p>
+                    <div id="drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-8 mb-4 transition-colors hover:border-green-500 hover:bg-green-50 cursor-pointer">
+                        <div class="text-3xl mb-2">⬆️</div>
+                        <p class="text-sm text-slate-500">Dateien hierher ziehen oder klicken</p>
+                        <input type="file" multiple accept="image/*,.pdf,.jpg,.jpeg,.png,.tiff" class="hidden" id="file-input">
+                    </div>
+                    <div class="flex gap-3 justify-center">
+                        <label class="inline-flex items-center gap-2 cursor-pointer bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors">
+                            <span>Dateien wählen</span>
+                            <input type="file" multiple accept="image/*,.pdf,.jpg,.jpeg,.png,.tiff" class="hidden" id="files-btn">
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer bg-slate-700 hover:bg-slate-800 text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors">
+                            <span>Ordner wählen</span>
+                            <input type="file" webkitdirectory directory class="hidden" id="folder-btn">
+                        </label>
+                    </div>
+                    <div id="file-list" class="mt-6 text-left space-y-2 hidden"></div>
+                </div>
+            </div>
+
+            <!-- Upload-Ergebnis -->
+            <div id="upload-result" class="mt-8 glass-panel rounded-2xl p-6 hidden">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 font-bold">✓</div>
+                    <h4 class="font-bold text-slate-800">Hochgeladene Belege</h4>
+                    <span id="upload-count" class="text-sm text-slate-500"></span>
+                </div>
+                <div id="upload-summary" class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2c: Steuerrecht-Wissensdatenbank -->
+        <section id="steuerrecht" class="scroll-mt-24">
+            <div class="text-center mb-10">
+                <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Integriertes Fachwissen</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Österreichisches Steuerrecht — aktuell 2025/2026</p>
+                <p class="mt-4 text-lg text-slate-500">Alle relevanten USt-Regelungen direkt in der KI-Verarbeitung hinterlegt.</p>
+            </div>
+
+            <!-- USt-Sätze -->
+            <div class="glass-panel rounded-2xl p-8 mb-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <span class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-sm font-bold">%</span>
+                    Umsatzsteuersätze Österreich
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-green-50 border border-green-200 rounded-xl p-5">
+                        <div class="text-3xl font-extrabold text-green-700">20%</div>
+                        <div class="text-sm font-bold text-slate-700 mt-1">Normalsteuersatz</div>
+                        <p class="text-xs text-slate-500 mt-2">Standard für die meisten Waren und Dienstleistungen, Elektronik, Kleidung, Beratungsleistungen.</p>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                        <div class="text-3xl font-extrabold text-blue-700">13%</div>
+                        <div class="text-sm font-bold text-slate-700 mt-1">Ermäßigt I</div>
+                        <p class="text-xs text-slate-500 mt-2">Blumen, Kunstgegenstände, Wein ab Hof, Kulturveranstaltungen, Sportveranstaltungen.</p>
+                    </div>
+                    <div class="bg-orange-50 border border-orange-200 rounded-xl p-5">
+                        <div class="text-3xl font-extrabold text-orange-700">10%</div>
+                        <div class="text-sm font-bold text-slate-700 mt-1">Ermäßigt II</div>
+                        <p class="text-xs text-slate-500 mt-2">Lebensmittel, Bücher, Zeitungen, Personenbeförderung, Vermietung zu Wohnzwecken, Medikamente.</p>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                        <div class="text-3xl font-extrabold text-slate-700">0%</div>
+                        <div class="text-sm font-bold text-slate-700 mt-1">Nullsteuersatz</div>
+                        <p class="text-xs text-slate-500 mt-2">IG-Lieferungen, Ausfuhrlieferungen, PV-Anlagen (bis 03/2025). Ab 2026: Hygieneartikel.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs für Regelungen -->
+            <div class="glass-panel rounded-2xl overflow-hidden">
+                <div class="flex flex-wrap border-b border-slate-200 bg-slate-50">
+                    <button onclick="switchTab('kur')" id="tab-kur" class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-green-700 text-green-700 bg-white">Kleinunternehmer</button>
+                    <button onclick="switchTab('rc')" id="tab-rc" class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700">Reverse Charge</button>
+                    <button onclick="switchTab('ig')" id="tab-ig" class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700">IG-Erwerb/Lieferung</button>
+                    <button onclick="switchTab('vst')" id="tab-vst" class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700">Vorsteuerabzug</button>
+                    <button onclick="switchTab('uva')" id="tab-uva" class="tab-btn px-6 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-700">UVA & Fristen</button>
+                </div>
+
+                <!-- Kleinunternehmerregelung -->
+                <div id="content-kur" class="tab-content p-8">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="flex-shrink-0 w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">🏪</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Kleinunternehmerregelung — § 6 Abs. 1 Z 27 UStG</h3>
+                            <p class="text-sm text-slate-500 mt-1">Aktuell seit 1. Jänner 2025 — EU-weit harmonisiert.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-600">
+                                <div class="font-bold text-slate-800">Umsatzgrenze: € 55.000 brutto/Jahr</div>
+                                <p class="text-sm text-slate-600 mt-1">Seit 2025 gilt eine <strong>Brutto-Grenze</strong> (vorher: € 35.000 netto). Die fiktive USt wird nicht mehr herausgerechnet.</p>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <div class="font-bold text-slate-800">10 % Toleranzregel (NEU)</div>
+                                <p class="text-sm text-slate-600 mt-1">Überschreitung bis <strong>€ 60.500</strong>: Befreiung gilt bis Jahresende weiter. Über 10 %: ab Überschreitung steuerpflichtig. Im Folgejahr keine KUR möglich.</p>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                                <div class="font-bold text-slate-800">EU-weite Anwendung (NEU 2025)</div>
+                                <p class="text-sm text-slate-600 mt-1">Unternehmer aus anderen EU-Staaten können unter bestimmten Voraussetzungen die KUR in AT nutzen — und umgekehrt. EU-weite Grenze: € 100.000.</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800 mb-2">Rechnungshinweis (Pflicht)</div>
+                                <div class="bg-white p-3 rounded border border-slate-200 text-sm font-mono text-slate-600">"Umsatzsteuerbefreit — Kleinunternehmer gem. § 6 Abs. 1 Z 27 UStG"</div>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+                                <div class="font-bold text-slate-800">Kein Vorsteuerabzug</div>
+                                <p class="text-sm text-slate-600 mt-1">Kleinunternehmer können keine Vorsteuer geltend machen. Reverse-Charge- und IG-Erwerb-Pflichten bestehen trotzdem.</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800">Verzicht & Bindungsfrist</div>
+                                <p class="text-sm text-slate-600 mt-1">Freiwilliger Verzicht möglich (Optionserklärung). Bindungsfrist: <strong>mindestens 5 Jahre</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reverse Charge -->
+                <div id="content-rc" class="tab-content p-8 hidden">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">🔄</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Reverse Charge — § 19 Abs. 1a UStG</h3>
+                            <p class="text-sm text-slate-500 mt-1">Umkehr der Steuerschuld auf den Leistungsempfänger.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600">
+                                <div class="font-bold text-slate-800">Grundprinzip</div>
+                                <p class="text-sm text-slate-600 mt-1">Nicht der leistende Unternehmer, sondern der <strong>Leistungsempfänger</strong> schuldet die USt und führt sie ans Finanzamt ab.</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800 mb-2">Anwendungsfälle</div>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• Grenzüberschreitende B2B-Dienstleistungen (EU)</li>
+                                    <li>• Bauleistungen (§ 19 Abs. 1a)</li>
+                                    <li>• Grundstückslieferungen (Option)</li>
+                                    <li>• Schrott- und Altmetalllieferungen</li>
+                                    <li>• Sicherungseigentum und Gebrauchtgeräte</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800 mb-2">Rechnungsanforderungen</div>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• <strong>Keine USt</strong> auf der Rechnung ausweisen</li>
+                                    <li>• Hinweis: "Steuerschuldnerschaft des Leistungsempfängers"</li>
+                                    <li>• UID-Nummer des Empfängers angeben</li>
+                                </ul>
+                            </div>
+                            <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                                <div class="font-bold text-slate-800">UVA-Kennzahlen</div>
+                                <div class="text-sm text-slate-600 mt-1 space-y-1">
+                                    <p><strong>Leistender:</strong> KZ 000 (Umsatz) + KZ 021 (Abzug)</p>
+                                    <p><strong>Empfänger:</strong> KZ 057/032/048/044 (Steuer) + KZ 089 (Vorsteuer)</p>
+                                </div>
+                            </div>
+                            <div class="bg-red-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800">Kleinunternehmer-Pflicht</div>
+                                <p class="text-sm text-slate-600 mt-1">Auch Kleinunternehmer müssen bei Reverse Charge die USt abführen — <strong>ohne</strong> Vorsteuerabzug.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IG-Erwerb/Lieferung -->
+                <div id="content-ig" class="tab-content p-8 hidden">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">🇪🇺</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Innergemeinschaftlicher Erwerb & Lieferung</h3>
+                            <p class="text-sm text-slate-500 mt-1">Art. 1, Art. 6 und Art. 7 UStG — Warenverkehr innerhalb der EU.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-600">
+                                <div class="font-bold text-slate-800">IG-Lieferung (Verkauf in EU)</div>
+                                <p class="text-sm text-slate-600 mt-1">In AT <strong>steuerfrei</strong> (0 %), wenn: Empfänger hat gültige UID, Ware gelangt nachweislich in anderen EU-Staat, Abnehmer ist Unternehmer.</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-400">
+                                <div class="font-bold text-slate-800">IG-Erwerb (Kauf aus EU)</div>
+                                <p class="text-sm text-slate-600 mt-1"><strong>Erwerbsteuer</strong> in AT fällig. Der Erwerber berechnet die USt selbst und kann sie gleichzeitig als Vorsteuer abziehen (wenn VSt-berechtigt).</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800 mb-2">Meldepflichten</div>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• <strong>ZM</strong> (Zusammenfassende Meldung): monatlich bis zum Ende des Folgemonats</li>
+                                    <li>• <strong>UVA</strong>: IG-Erwerbe unter eigener Kennzahl (KZ 070/071/072 je Steuersatz)</li>
+                                    <li>• Vorsteuer IG-Erwerb: KZ 065</li>
+                                </ul>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <div class="font-bold text-slate-800">Dreiecksgeschäft (Vereinfachung)</div>
+                                <p class="text-sm text-slate-600 mt-1">Bei 3 Unternehmern in 3 EU-Staaten: Der mittlere Unternehmer muss sich nicht im Bestimmungsland registrieren. Eigene Kennzeichnung in der ZM.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vorsteuerabzug -->
+                <div id="content-vst" class="tab-content p-8 hidden">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center text-2xl">💰</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">Vorsteuerabzug — § 12 UStG</h3>
+                            <p class="text-sm text-slate-500 mt-1">Voraussetzungen und Ausschlüsse für den Abzug der Vorsteuer.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-emerald-50 p-4 rounded-lg border-l-4 border-emerald-600">
+                                <div class="font-bold text-slate-800">Voraussetzungen</div>
+                                <ul class="text-sm text-slate-600 mt-1 space-y-1">
+                                    <li>• Leistung für das <strong>Unternehmen</strong> erbracht</li>
+                                    <li>• Ordnungsgemäße <strong>Rechnung</strong> gem. § 11 UStG</li>
+                                    <li>• Leistender Unternehmer hat USt geschuldet und ausgewiesen</li>
+                                    <li>• Kein Ausschlussgrund (z. B. PKW, Repräsentation)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800 mb-2">Rechnungsmerkmale gem. § 11 UStG</div>
+                                <ul class="text-sm text-slate-600 space-y-1">
+                                    <li>• Name & Anschrift Leistender + Empfänger</li>
+                                    <li>• Menge und Art der Leistung</li>
+                                    <li>• Entgelt, Steuersatz, Steuerbetrag</li>
+                                    <li>• Rechnungsdatum + fortlaufende Nummer</li>
+                                    <li>• UID-Nummer ab € 400 brutto</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-400">
+                                <div class="font-bold text-slate-800">Ausgeschlossen vom VSt-Abzug</div>
+                                <ul class="text-sm text-slate-600 mt-1 space-y-1">
+                                    <li>• PKW und Kombi (Ausnahme: Fahrschule, Taxi, Vorführwagen)</li>
+                                    <li>• Repräsentationsaufwendungen</li>
+                                    <li>• Nicht unternehmerisch genutzte Leistungen</li>
+                                    <li>• Kleinunternehmer (generell kein VSt-Abzug)</li>
+                                </ul>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <div class="font-bold text-slate-800">Kleinbetragsrechnung bis € 400</div>
+                                <p class="text-sm text-slate-600 mt-1">Vereinfachte Rechnung genügt: Name des Leistenden, Leistungsbeschreibung, Bruttobetrag, Steuersatz. Keine UID nötig.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UVA & Fristen -->
+                <div id="content-uva" class="tab-content p-8 hidden">
+                    <div class="flex items-start gap-4 mb-6">
+                        <div class="flex-shrink-0 w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center text-2xl">📅</div>
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-800">UVA-Fristen & Meldepflichten</h3>
+                            <p class="text-sm text-slate-500 mt-1">Umsatzsteuervoranmeldung, Jahreserklärung, Zusammenfassende Meldung.</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-red-50 p-5 rounded-xl border border-red-200">
+                            <div class="font-bold text-slate-800 text-lg mb-3">UVA (U30)</div>
+                            <div class="space-y-2 text-sm text-slate-600">
+                                <p><strong>Monatlich</strong> bei Vorjahresumsatz &gt; € 100.000</p>
+                                <p><strong>Vierteljährlich</strong> bei Vorjahresumsatz ≤ € 100.000</p>
+                                <p class="bg-white p-2 rounded border border-red-200"><strong>Frist:</strong> bis zum 15. des zweitfolgenden Monats (z. B. Jänner-UVA → 15. März)</p>
+                                <p>Einreichung über <strong>FinanzOnline</strong></p>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 p-5 rounded-xl border border-blue-200">
+                            <div class="font-bold text-slate-800 text-lg mb-3">Jahreserklärung (U1)</div>
+                            <div class="space-y-2 text-sm text-slate-600">
+                                <p>Einmal jährlich — ersetzt die UVAs nicht, sondern ergänzt sie.</p>
+                                <p class="bg-white p-2 rounded border border-blue-200"><strong>Frist:</strong> 30. Juni des Folgejahres (elektronisch) bzw. 30. April (Papier)</p>
+                                <p>Enthält alle Jahresumsätze, Vorsteuern, Korrekturen.</p>
+                            </div>
+                        </div>
+                        <div class="bg-purple-50 p-5 rounded-xl border border-purple-200">
+                            <div class="font-bold text-slate-800 text-lg mb-3">ZM (Zusammenfassende Meldung)</div>
+                            <div class="space-y-2 text-sm text-slate-600">
+                                <p>Bei IG-Lieferungen, IG-Dienstleistungen, Dreiecksgeschäften.</p>
+                                <p class="bg-white p-2 rounded border border-purple-200"><strong>Frist:</strong> bis Ende des Folgemonats</p>
+                                <p>Über <strong>FinanzOnline</strong> — enthält UID + Umsatz je Empfänger.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                        <div class="font-bold text-slate-800">Wichtige UVA-Kennzahlen (Übersicht)</div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 text-sm">
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 000</strong><br><span class="text-slate-500">Umsatz 20 %</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 001</strong><br><span class="text-slate-500">Umsatz 10 %</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 006</strong><br><span class="text-slate-500">Umsatz 13 %</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 021</strong><br><span class="text-slate-500">IG-Lieferung steuerfrei</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 057</strong><br><span class="text-slate-500">RC-Steuer § 19</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 065</strong><br><span class="text-slate-500">VSt IG-Erwerb</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 066</strong><br><span class="text-slate-500">VSt Inland</span></div>
+                            <div class="bg-white p-2 rounded text-center"><strong>KZ 089</strong><br><span class="text-slate-500">VSt RC § 19</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quelle -->
+            <div class="mt-4 text-center text-xs text-slate-400">
+                Quellen: <a href="https://www.wko.at/steuern/kleinunternehmerregelung-umsatzsteuer" class="underline hover:text-slate-600">WKO</a>,
+                <a href="https://www.usp.gv.at/themen/steuern-finanzen/umsatzsteuer-ueberblick" class="underline hover:text-slate-600">USP.gv.at</a>,
+                <a href="https://www.freefinance.at/steuern/reverse-charge.html" class="underline hover:text-slate-600">FreeFinance</a>,
+                <a href="https://www.finanz.at/steuern/umsatzsteuer/reverse-charge/" class="underline hover:text-slate-600">finanz.at</a> — Stand: März 2026
             </div>
         </section>
 
@@ -274,23 +628,27 @@
         <!-- SECTION 5: Strategy Map -->
         <section id="strategy" class="scroll-mt-24 border-t border-slate-200 pt-16">
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-extrabold text-slate-900">Marktstrategie Steiermark</h2>
+                <h2 class="text-3xl font-extrabold text-slate-900">Marktstrategie Österreich</h2>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
-                    <h3 class="font-bold text-slate-800 mb-6">Zielregionen Priorisierung</h3>
+                    <h3 class="font-bold text-slate-800 mb-6">Bundesländer Priorisierung</h3>
                     <div class="chart-wrapper">
                         <canvas id="marketChart"></canvas>
                     </div>
                 </div>
                 <div class="space-y-6">
                     <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-600">
-                        <h4 class="font-bold">Phase 1: Graz & Graz-Umgebung</h4>
-                        <p class="text-sm text-slate-600">Fokus auf technikaffine Kanzleien mit hohem KMU-Volumen.</p>
+                        <h4 class="font-bold">Phase 1: Wien, Niederösterreich & Oberösterreich</h4>
+                        <p class="text-sm text-slate-600">Fokus auf urbane, technikaffine Kanzleien mit hohem KMU-Volumen.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-400">
+                        <h4 class="font-bold">Phase 2: Steiermark, Kärnten & Salzburg</h4>
+                        <p class="text-sm text-slate-600">Wachsende Nachfrage durch Digitalisierungsdruck und Fachkräftemangel.</p>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-slate-400">
-                        <h4 class="font-bold">Phase 2: Obersteiermark</h4>
-                        <p class="text-sm text-slate-600">Automatisierungsdruck durch Fachkräftemangel in peripheren Regionen.</p>
+                        <h4 class="font-bold">Phase 3: Tirol, Vorarlberg & Burgenland</h4>
+                        <p class="text-sm text-slate-600">Flächendeckende Abdeckung aller Bundesländer.</p>
                     </div>
                 </div>
             </div>
@@ -301,8 +659,8 @@
     <footer class="bg-slate-900 text-slate-300 py-12 mt-24">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <span class="text-2xl">🤖</span>
-            <span class="font-bold text-white tracking-tight ml-2">TaxAuto Styria 2024</span>
-            <p class="mt-4 text-sm text-slate-400 italic">"Digitaler Fortschritt für steirische Werte."</p>
+            <span class="font-bold text-white tracking-tight ml-2">TaxAuto Austria 2024</span>
+            <p class="mt-4 text-sm text-slate-400 italic">"Digitaler Fortschritt für österreichische Steuerberatung."</p>
         </div>
     </footer>
 
@@ -386,8 +744,8 @@
             type: 'scatter',
             data: {
                 datasets: [{
-                    label: 'Bezirke',
-                    data: [{x: 90, y: 80, r: 20, region: 'Graz'}, {x: 70, y: 65, r: 15, region: 'Graz-Umg.'}, {x: 40, y: 30, r: 10, region: 'Leibnitz'}, {x: 20, y: 50, r: 12, region: 'Leoben'}],
+                    label: 'Bundesländer',
+                    data: [{x: 95, y: 90, r: 22, region: 'Wien'}, {x: 80, y: 75, r: 18, region: 'Oberösterreich'}, {x: 75, y: 70, r: 16, region: 'Niederösterreich'}, {x: 70, y: 65, r: 14, region: 'Steiermark'}, {x: 60, y: 55, r: 12, region: 'Salzburg'}, {x: 55, y: 50, r: 11, region: 'Tirol'}, {x: 45, y: 40, r: 10, region: 'Kärnten'}, {x: 40, y: 35, r: 9, region: 'Vorarlberg'}, {x: 35, y: 30, r: 8, region: 'Burgenland'}],
                     backgroundColor: 'rgba(21, 128, 61, 0.6)'
                 }]
             },
@@ -412,12 +770,96 @@
         initChaos();
         calculateROI();
 
+        // --- TAB LOGIC (Steuerrecht) ---
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => { el.classList.remove('border-green-700', 'text-green-700', 'bg-white'); el.classList.add('border-transparent', 'text-slate-500'); });
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tab);
+            activeBtn.classList.add('border-green-700', 'text-green-700', 'bg-white');
+            activeBtn.classList.remove('border-transparent', 'text-slate-500');
+        }
+
+        // --- UPLOAD LOGIC ---
+        const cameraInput = document.getElementById('camera-input');
+        const cameraPreview = document.getElementById('camera-preview');
+        const cameraImg = document.getElementById('camera-img');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const filesBtn = document.getElementById('files-btn');
+        const folderBtn = document.getElementById('folder-btn');
+        const fileList = document.getElementById('file-list');
+        const uploadResult = document.getElementById('upload-result');
+        const uploadCount = document.getElementById('upload-count');
+        const uploadSummary = document.getElementById('upload-summary');
+
+        let uploadedFiles = [];
+
+        cameraInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                cameraImg.src = url;
+                cameraPreview.classList.remove('hidden');
+                addToUploaded([file]);
+            }
+        });
+
+        function handleFiles(files) {
+            const validFiles = Array.from(files).filter(f =>
+                f.type.startsWith('image/') || f.type === 'application/pdf'
+            );
+            if (validFiles.length > 0) {
+                addToUploaded(validFiles);
+                showFileList(validFiles);
+            }
+        }
+
+        filesBtn.addEventListener('change', (e) => handleFiles(e.target.files));
+        folderBtn.addEventListener('change', (e) => handleFiles(e.target.files));
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-green-500', 'bg-green-50'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-green-500', 'bg-green-50'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('border-green-500', 'bg-green-50');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        function showFileList(files) {
+            fileList.classList.remove('hidden');
+            files.forEach(f => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2 text-sm bg-slate-50 p-2 rounded border-l-4 border-blue-400';
+                const icon = f.type === 'application/pdf' ? '📄' : '🖼️';
+                const size = (f.size / 1024).toFixed(0);
+                row.innerHTML = `<span>${icon}</span><span class="flex-1 truncate">${f.name}</span><span class="text-slate-400">${size} KB</span><span class="text-green-600">✓</span>`;
+                fileList.appendChild(row);
+            });
+        }
+
+        function addToUploaded(files) {
+            uploadedFiles = uploadedFiles.concat(Array.from(files));
+            uploadResult.classList.remove('hidden');
+            uploadCount.textContent = `${uploadedFiles.length} Beleg(e) bereit`;
+            const images = uploadedFiles.filter(f => f.type.startsWith('image/')).length;
+            const pdfs = uploadedFiles.filter(f => f.type === 'application/pdf').length;
+            uploadSummary.innerHTML = `
+                <div class="bg-green-50 p-3 rounded-lg"><div class="text-2xl font-bold text-green-700">${uploadedFiles.length}</div><div class="text-xs text-slate-500">Gesamt</div></div>
+                <div class="bg-blue-50 p-3 rounded-lg"><div class="text-2xl font-bold text-blue-700">${images}</div><div class="text-xs text-slate-500">Fotos/Bilder</div></div>
+                <div class="bg-orange-50 p-3 rounded-lg"><div class="text-2xl font-bold text-orange-700">${pdfs}</div><div class="text-xs text-slate-500">PDFs</div></div>
+                <div class="bg-slate-50 p-3 rounded-lg"><div class="text-2xl font-bold text-slate-700">${(uploadedFiles.reduce((a,f) => a+f.size, 0)/1024/1024).toFixed(1)} MB</div><div class="text-xs text-slate-500">Gesamtgröße</div></div>
+            `;
+        }
+
         // JSON Animation
         const jsonPreview = document.getElementById('json-preview');
         const samples = [
-            `{ "datum": "2024-05-15", "partner": "Billa Graz", "brutto": 45.90 }`,
-            `{ "datum": "2024-05-16", "partner": "OMV Graz Ost", "brutto": 82.10 }`,
-            `{ "datum": "2024-05-18", "partner": "Post AG", "brutto": 5.40 }`
+            `{ "datum": "2024-05-15", "partner": "Billa", "brutto": 45.90, "mwst_satz": 10, "reverse_charge": false, "uva_kz": "001" }`,
+            `{ "datum": "2024-05-16", "partner": "OMV", "brutto": 82.10, "mwst_satz": 20, "reverse_charge": false, "uva_kz": "000" }`,
+            `{ "datum": "2024-05-18", "partner": "IT-Service GmbH (DE)", "brutto": 1200.00, "mwst_satz": 20, "reverse_charge": true, "uva_kz": "057" }`
         ];
         let sampleIdx = 0;
         setInterval(() => {
