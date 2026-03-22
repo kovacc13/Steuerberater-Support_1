@@ -277,14 +277,10 @@
                 <div id="upload-summary" class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                 </div>
 
-                <!-- API Key + Auswerten Button -->
+                <!-- Auswerten Button -->
                 <div class="mt-6 pt-6 border-t border-slate-200">
-                    <div class="flex flex-col sm:flex-row gap-4 items-end">
-                        <div class="flex-1 w-full">
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Claude API Key</label>
-                            <input type="password" id="api-key-input" placeholder="sk-ant-api03-..." class="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none">
-                            <p class="text-xs text-slate-400 mt-1">Ihr Key wird nur lokal im Browser verwendet und nirgends gespeichert.</p>
-                        </div>
+                    <div class="flex flex-col sm:flex-row gap-4 items-center">
+                        <p class="text-sm text-slate-500 flex-1">Die KI-Analyse läuft automatisch über unseren Server — kein API Key nötig.</p>
                         <button id="analyze-btn" onclick="analyzeFiles()" class="bg-green-700 hover:bg-green-800 text-white rounded-lg px-8 py-2.5 font-bold text-sm transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                             <span id="analyze-btn-icon">🔍</span>
                             <span id="analyze-btn-text">Belege auswerten</span>
@@ -949,11 +945,6 @@
         let analysisResults = [];
 
         async function analyzeFiles() {
-            const apiKey = document.getElementById('api-key-input').value.trim();
-            if (!apiKey) {
-                showError('Bitte geben Sie Ihren Claude API Key ein.');
-                return;
-            }
             if (uploadedFiles.length === 0) {
                 showError('Keine Dateien zum Auswerten vorhanden.');
                 return;
@@ -989,13 +980,10 @@
                         ? { type: "document", source: { type: "base64", media_type: "application/pdf", data: base64 } }
                         : { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } };
 
-                    const response = await fetch('https://api.anthropic.com/v1/messages', {
+                    const response = await fetch('/api/analyze', {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/json',
-                            'x-api-key': apiKey,
-                            'anthropic-version': '2023-06-01',
-                            'anthropic-dangerous-direct-browser-access': 'true'
+                            'Content-Type': 'application/json'
                         },
                         body: JSON.stringify({
                             model: 'claude-sonnet-4-20250514',
@@ -1032,7 +1020,7 @@ Falls der Beleg nicht lesbar ist oder keine Rechnung/Beleg darstellt, gib trotzd
 
                     if (!response.ok) {
                         const err = await response.json().catch(() => ({}));
-                        throw new Error(err.error?.message || `API Fehler: ${response.status}`);
+                        throw new Error(err.error?.message || err.error || `API Fehler: ${response.status}`);
                     }
 
                     const data = await response.json();
