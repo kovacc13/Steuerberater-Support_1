@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Strategie-Dashboard: Steuerberatung 4.0 Steiermark</title>
+    <title>Strategie-Dashboard: Steuerberatung 4.0 Österreich</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -58,7 +58,7 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0 flex items-center gap-2">
                         <span class="text-2xl">🤖</span>
-                        <span class="font-bold text-xl text-slate-800 tracking-tight">TaxAuto<span class="text-green-700">Styria</span></span>
+                        <span class="font-bold text-xl text-slate-800 tracking-tight">TaxAuto<span class="text-green-700">Austria</span></span>
                     </div>
                 </div>
                 <div class="hidden md:flex items-center space-x-4">
@@ -83,7 +83,7 @@
                             <span class="block text-green-700 xl:inline">Schuhschachtel.</span>
                         </h1>
                         <p class="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                            Ihre Strategie zur digitalen Transformation der steirischen Steuerberatung. Wir nutzen <strong>Claude AI</strong> & <strong>Excel</strong>, um Belegchaos in strukturierte Import-Daten zu verwandeln.
+                            Ihre Strategie zur digitalen Transformation der österreichischen Steuerberatung. Wir nutzen <strong>Claude AI</strong> & <strong>Excel</strong>, um Belegchaos in strukturierte Import-Daten zu verwandeln.
                         </p>
                         <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
                             <div class="rounded-md shadow">
@@ -200,7 +200,7 @@
                         <div class="bg-slate-800 p-4 rounded-lg">
                             <pre id="json-preview">{
   "datum": "2024-05-15",
-  "partner": "Billa Graz",
+  "partner": "Billa",
   "brutto": 45.90,
   "mwst_satz": 10.0,
   "uid": "ATU12345678"
@@ -274,23 +274,27 @@
         <!-- SECTION 5: Strategy Map -->
         <section id="strategy" class="scroll-mt-24 border-t border-slate-200 pt-16">
             <div class="text-center mb-12">
-                <h2 class="text-3xl font-extrabold text-slate-900">Marktstrategie Steiermark</h2>
+                <h2 class="text-3xl font-extrabold text-slate-900">Marktstrategie Österreich</h2>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div class="bg-white p-6 rounded-xl shadow-lg border border-slate-100">
-                    <h3 class="font-bold text-slate-800 mb-6">Zielregionen Priorisierung</h3>
+                    <h3 class="font-bold text-slate-800 mb-6">Bundesländer Priorisierung</h3>
                     <div class="chart-wrapper">
                         <canvas id="marketChart"></canvas>
                     </div>
                 </div>
                 <div class="space-y-6">
                     <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-600">
-                        <h4 class="font-bold">Phase 1: Graz & Graz-Umgebung</h4>
-                        <p class="text-sm text-slate-600">Fokus auf technikaffine Kanzleien mit hohem KMU-Volumen.</p>
+                        <h4 class="font-bold">Phase 1: Wien, Niederösterreich & Oberösterreich</h4>
+                        <p class="text-sm text-slate-600">Fokus auf urbane, technikaffine Kanzleien mit hohem KMU-Volumen.</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-400">
+                        <h4 class="font-bold">Phase 2: Steiermark, Kärnten & Salzburg</h4>
+                        <p class="text-sm text-slate-600">Wachsende Nachfrage durch Digitalisierungsdruck und Fachkräftemangel.</p>
                     </div>
                     <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-slate-400">
-                        <h4 class="font-bold">Phase 2: Obersteiermark</h4>
-                        <p class="text-sm text-slate-600">Automatisierungsdruck durch Fachkräftemangel in peripheren Regionen.</p>
+                        <h4 class="font-bold">Phase 3: Tirol, Vorarlberg & Burgenland</h4>
+                        <p class="text-sm text-slate-600">Flächendeckende Abdeckung aller Bundesländer.</p>
                     </div>
                 </div>
             </div>
@@ -301,8 +305,8 @@
     <footer class="bg-slate-900 text-slate-300 py-12 mt-24">
         <div class="max-w-7xl mx-auto px-4 text-center">
             <span class="text-2xl">🤖</span>
-            <span class="font-bold text-white tracking-tight ml-2">TaxAuto Styria 2024</span>
-            <p class="mt-4 text-sm text-slate-400 italic">"Digitaler Fortschritt für steirische Werte."</p>
+            <span class="font-bold text-white tracking-tight ml-2">TaxAuto Austria 2024</span>
+            <p class="mt-4 text-sm text-slate-400 italic">"Digitaler Fortschritt für österreichische Steuerberatung."</p>
         </div>
     </footer>
 
@@ -386,8 +390,8 @@
             type: 'scatter',
             data: {
                 datasets: [{
-                    label: 'Bezirke',
-                    data: [{x: 90, y: 80, r: 20, region: 'Graz'}, {x: 70, y: 65, r: 15, region: 'Graz-Umg.'}, {x: 40, y: 30, r: 10, region: 'Leibnitz'}, {x: 20, y: 50, r: 12, region: 'Leoben'}],
+                    label: 'Bundesländer',
+                    data: [{x: 95, y: 90, r: 22, region: 'Wien'}, {x: 80, y: 75, r: 18, region: 'Oberösterreich'}, {x: 75, y: 70, r: 16, region: 'Niederösterreich'}, {x: 70, y: 65, r: 14, region: 'Steiermark'}, {x: 60, y: 55, r: 12, region: 'Salzburg'}, {x: 55, y: 50, r: 11, region: 'Tirol'}, {x: 45, y: 40, r: 10, region: 'Kärnten'}, {x: 40, y: 35, r: 9, region: 'Vorarlberg'}, {x: 35, y: 30, r: 8, region: 'Burgenland'}],
                     backgroundColor: 'rgba(21, 128, 61, 0.6)'
                 }]
             },
@@ -415,8 +419,8 @@
         // JSON Animation
         const jsonPreview = document.getElementById('json-preview');
         const samples = [
-            `{ "datum": "2024-05-15", "partner": "Billa Graz", "brutto": 45.90 }`,
-            `{ "datum": "2024-05-16", "partner": "OMV Graz Ost", "brutto": 82.10 }`,
+            `{ "datum": "2024-05-15", "partner": "Billa", "brutto": 45.90 }`,
+            `{ "datum": "2024-05-16", "partner": "OMV", "brutto": 82.10 }`,
             `{ "datum": "2024-05-18", "partner": "Post AG", "brutto": 5.40 }`
         ];
         let sampleIdx = 0;
