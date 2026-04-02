@@ -10,11 +10,11 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #334155; scroll-behavior: smooth; }
-        
+
         /* Custom Utilities for Shoebox Animation */
         .receipt-item { transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .receipt-chaos { transform: rotate(var(--rot)) translate(var(--tx), var(--ty)); }
-        
+
         .chart-wrapper {
             position: relative;
             width: 100%;
@@ -47,6 +47,32 @@
             z-index: 1;
         }
         .last-step .step-line { display: none; }
+
+        /* Scroll Animations */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+        }
+        .scroll-reveal.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Emergency Button Pulse */
+        @keyframes emergency-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); }
+        }
+        .emergency-btn {
+            animation: emergency-pulse 2s infinite;
+        }
+
+        /* Trust Badge Glow */
+        .trust-badge {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 1px solid #bbf7d0;
+        }
     </style>
 </head>
 <body class="bg-slate-50">
@@ -63,12 +89,16 @@
                 </div>
                 <div class="hidden md:flex items-center space-x-4">
                     <button onclick="scrollToSection('mission')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Mission</button>
+                    <button onclick="scrollToSection('trust')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Versprechen</button>
                     <button onclick="scrollToSection('simulation')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Simulation</button>
                     <button onclick="scrollToSection('workflow')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Workflow</button>
-                    <button onclick="scrollToSection('upload')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Upload & Auswertung</button>
+                    <button onclick="scrollToSection('upload')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Upload</button>
                     <button onclick="scrollToSection('steuerrecht')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Steuerrecht</button>
                     <button onclick="scrollToSection('analysis')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Mehrwert</button>
-                    <button onclick="scrollToSection('strategy')" class="text-slate-600 hover:text-green-700 font-medium px-3 py-2 text-sm">Strategie</button>
+                    <a href="tel:+4312345678" class="emergency-btn bg-red-600 hover:bg-red-700 text-white rounded-full px-4 py-2 text-sm font-bold transition-colors flex items-center gap-1.5 ml-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
+                        Sofort-Hilfe
+                    </a>
                 </div>
             </div>
         </div>
@@ -85,12 +115,20 @@
                             <span class="block text-green-700 xl:inline">Schuhschachtel.</span>
                         </h1>
                         <p class="mt-3 text-base text-slate-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
-                            Ihre Strategie zur digitalen Transformation der österreichischen Steuerberatung. Wir nutzen <strong>Claude AI</strong> & <strong>Excel</strong>, um Belegchaos in strukturierte Import-Daten zu verwandeln.
+                            Keine versteckten Kosten. Keine Überraschungs-Rechnungen. Wir nutzen <strong>Claude AI</strong>, um Belegchaos in Sekunden zu strukturierten Import-Daten zu verwandeln — transparent und ehrlich.
                         </p>
-                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
+                        <p class="mt-2 text-sm text-green-700 font-semibold sm:max-w-xl sm:mx-auto lg:mx-0">
+                            Transparenz ist kein Feature. Es ist unser Grundprinzip.
+                        </p>
+                        <div class="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start gap-4">
                             <div class="rounded-md shadow">
                                 <a href="#simulation" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-green-700 hover:bg-green-800 md:py-4 md:text-lg transition-colors">
                                     Lösung demonstrieren
+                                </a>
+                            </div>
+                            <div class="mt-3 sm:mt-0">
+                                <a href="#trust" class="w-full flex items-center justify-center px-8 py-3 border border-green-700 text-base font-medium rounded-md text-green-700 bg-white hover:bg-green-50 md:py-4 md:text-lg transition-colors">
+                                    Unser Versprechen
                                 </a>
                             </div>
                         </div>
@@ -116,8 +154,53 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
 
+        <!-- SECTION 0: Trust & Honesty Promise -->
+        <section id="trust" class="scroll-mt-24 scroll-reveal">
+            <div class="text-center mb-10">
+                <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Unser Versprechen</h2>
+                <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Ehrlichkeit statt Intransparenz</p>
+                <p class="mt-4 text-lg text-slate-500 max-w-3xl mx-auto">
+                    Wir kennen die Frustration: undurchsichtige Stundensätze, der "WTF-Moment" bei der Rechnung und die Angst, dass jeder Anruf extra kostet. Damit ist jetzt Schluss.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="trust-badge rounded-2xl p-8 text-center scroll-reveal">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Keine versteckten Kosten</h3>
+                    <p class="text-sm text-slate-600">Sie wissen vorher, was es kostet. Kein "Es kommt darauf an". Keine Überraschungs-Rechnungen.</p>
+                </div>
+
+                <div class="trust-badge rounded-2xl p-8 text-center scroll-reveal">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Sekunden statt Wochen</h3>
+                    <p class="text-sm text-slate-600">Belege werden in Echtzeit verarbeitet. Kein wochenlanges Warten auf den Jahresabschluss.</p>
+                </div>
+
+                <div class="trust-badge rounded-2xl p-8 text-center scroll-reveal">
+                    <div class="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Volle Transparenz</h3>
+                    <p class="text-sm text-slate-600">Sie sehen jeden Schritt der Verarbeitung. Keine Black Box, keine Überraschungen.</p>
+                </div>
+            </div>
+
+            <div class="mt-10 bg-slate-900 rounded-2xl p-8 md:p-10 text-center scroll-reveal">
+                <blockquote class="text-xl md:text-2xl font-bold text-white leading-relaxed">
+                    "Keine versteckten Kosten. Keine unnötigen Upsells.<br>
+                    <span class="text-green-400">Nur ehrliches Handwerk.</span>"
+                </blockquote>
+                <p class="mt-4 text-slate-400 text-sm">Unser Grundsatz seit Tag 1 — weil Vertrauen die Basis jeder guten Zusammenarbeit ist.</p>
+            </div>
+        </section>
+
         <!-- SECTION 1: Simulation -->
-        <section id="simulation" class="scroll-mt-24">
+        <section id="simulation" class="scroll-mt-24 scroll-reveal">
             <div class="text-center mb-10">
                 <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Der "Aha"-Effekt</h2>
                 <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Chaos zu Struktur</p>
@@ -150,7 +233,7 @@
         </section>
 
         <!-- SECTION 2: Technical Workflow (NEW) -->
-        <section id="workflow" class="scroll-mt-24">
+        <section id="workflow" class="scroll-mt-24 scroll-reveal">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-extrabold text-slate-900">Der Technische Bridge</h2>
                 <p class="mt-4 text-lg text-slate-500">Wie wir die "Magie" in den Kanzlei-Alltag integrieren.</p>
@@ -220,7 +303,7 @@
         </section>
 
         <!-- SECTION 2b: Upload-Bereich -->
-        <section id="upload" class="scroll-mt-24">
+        <section id="upload" class="scroll-mt-24 scroll-reveal">
             <div class="text-center mb-10">
                 <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Belege erfassen</h2>
                 <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Kamera, Datei oder ganzer Ordner</p>
@@ -367,7 +450,7 @@
         </section>
 
         <!-- SECTION 2c: Steuerrecht-Wissensdatenbank -->
-        <section id="steuerrecht" class="scroll-mt-24">
+        <section id="steuerrecht" class="scroll-mt-24 scroll-reveal">
             <div class="text-center mb-10">
                 <h2 class="text-base text-green-600 font-semibold tracking-wide uppercase">Integriertes Fachwissen</h2>
                 <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-slate-900 sm:text-4xl">Österreichisches Steuerrecht — aktuell 2025/2026</p>
@@ -653,7 +736,7 @@
         </section>
 
         <!-- SECTION 3: Stakeholder Analysis -->
-        <section id="analysis" class="scroll-mt-24">
+        <section id="analysis" class="scroll-mt-24 scroll-reveal">
             <div class="md:grid md:grid-cols-3 md:gap-12">
                 <div class="md:col-span-1">
                     <h2 class="text-3xl font-extrabold text-slate-900 mb-4">Mehrwert-Analyse</h2>
@@ -742,12 +825,42 @@
         </section>
     </div>
 
+    <!-- Mobile Floating Emergency Button -->
+    <a href="tel:+4312345678" class="md:hidden fixed bottom-6 right-6 z-50 emergency-btn bg-red-600 hover:bg-red-700 text-white rounded-full p-4 shadow-2xl transition-colors flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
+    </a>
+
     <!-- Footer -->
     <footer class="bg-slate-900 text-slate-300 py-12 mt-24">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <span class="text-2xl">🤖</span>
-            <span class="font-bold text-white tracking-tight ml-2">TaxAuto Austria 2024</span>
-            <p class="mt-4 text-sm text-slate-400 italic">"Digitaler Fortschritt für österreichische Steuerberatung."</p>
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="text-2xl">🤖</span>
+                        <span class="font-bold text-white tracking-tight">TaxAuto<span class="text-green-400">Austria</span></span>
+                    </div>
+                    <p class="text-sm text-slate-400">Digitale Steuerberatung, die Sie nicht im Dunkeln lässt.</p>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm mb-3">Unser Versprechen</h4>
+                    <ul class="space-y-2 text-sm text-slate-400">
+                        <li>Transparente Preise — immer</li>
+                        <li>Keine versteckten Gebühren</li>
+                        <li>KI-Power, menschliche Kontrolle</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm mb-3">Sofort-Kontakt</h4>
+                    <a href="tel:+4312345678" class="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white rounded-lg px-4 py-2 text-sm font-bold transition-colors emergency-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z"/></svg>
+                        Sofort-Hilfe anrufen
+                    </a>
+                    <p class="text-xs text-slate-500 mt-2">Mo-Fr 8:00-18:00 | Notfälle: 24/7</p>
+                </div>
+            </div>
+            <div class="border-t border-slate-800 pt-6 text-center">
+                <p class="text-sm text-slate-500">TaxAutoAustria 2026 — Ehrlich. Digital. Österreichisch.</p>
+            </div>
         </div>
     </footer>
 
@@ -856,6 +969,18 @@
         
         initChaos();
         calculateROI();
+
+        // --- SCROLL REVEAL ANIMATIONS ---
+        const scrollObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('revealed');
+                    scrollObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        document.querySelectorAll('.scroll-reveal').forEach(el => scrollObserver.observe(el));
 
         // --- TAB LOGIC (Steuerrecht) ---
         function switchTab(tab) {
